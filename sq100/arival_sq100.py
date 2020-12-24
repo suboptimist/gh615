@@ -95,10 +95,10 @@ class ArivalSQ100(object):
             raise SQ100MessageException('unexpected track header')
         if session_indices[0] != len(track.track_points):
             raise SQ100MessageException(
-                "unexpectes session start (" +
-                ("session_indicces : %d,%d, " % session_indices) +
-                ("number of track points in track: %d)" %
-                 len(track.track_points)))
+                "unexpectes session start ("
+                + ("session_indicces : %d,%d, " % session_indices)
+                + ("number of track points in track: %d)" %
+                   len(track.track_points)))
         if session_indices[1] - session_indices[0] + 1 != len(track_points):
             raise SQ100MessageException(
                 'session indices incompatible to number of received track '
@@ -146,19 +146,20 @@ class ArivalSQ100(object):
             LapInfo._make,
             struct.iter_unpack(">3I3H2B2H13s2H", parameter[29:]))
         laps = [
-            Lap(duration=datetime.timedelta(seconds=round(l.duration / 10, 1)),
+            Lap(duration=datetime.timedelta(
+                seconds=round(lap.duration / 10, 1)),
                 total_time=datetime.timedelta(
-                    seconds=round(l.total_time / 10, 1)),
-                distance=l.distance,
-                calories=l.calories,
-                max_speed=l.max_speed,
-                max_heart_rate=l.max_heart_rate,
-                avg_heart_rate=l.avg_heart_rate,
-                min_height=l.min_height,
-                max_height=l.max_height,
-                first_index=l.first_index,
-                last_index=l.last_index)
-            for l in lap_infos]
+                    seconds=round(lap.total_time / 10, 1)),
+                distance=lap.distance,
+                calories=lap.calories,
+                max_speed=lap.max_speed,
+                max_heart_rate=lap.max_heart_rate,
+                avg_heart_rate=lap.avg_heart_rate,
+                min_height=lap.min_height,
+                max_height=lap.max_height,
+                first_index=lap.first_index,
+                last_index=lap.last_index)
+            for lap in lap_infos]
         return track, laps
 
     @staticmethod
@@ -167,9 +168,9 @@ class ArivalSQ100(object):
             struct.unpack(">BH%dsB" % (len(message) - 4), message))
         if msg.payload_length != len(msg.parameter):
             raise SQ100MessageException(
-                "paylod has wrong length!\n" +
-                ("Message says %d\n" % msg.payload_length) +
-                ("Parameter length is %d" % len(msg.parameter)))
+                "paylod has wrong length!\n"
+                + ("Message says %d\n" % msg.payload_length)
+                + ("Parameter length is %d" % len(msg.parameter)))
         if msg.checksum != ArivalSQ100._calc_checksum(msg.parameter):
             raise SQ100MessageException("checksum wrong")
         return msg

@@ -22,9 +22,7 @@
 import argparse
 import cmd
 import configparser
-import glob
 import logging
-import os
 import tabulate
 
 from sq100.arival_sq100 import ArivalSQ100
@@ -129,24 +127,24 @@ class SQ100(object):
     def upload_tracks(self):
         print("Sorry! Uploading tracks is not yet implemented.")
         return
-        print("Upload Tracks")
-        files = glob.glob(
-            os.path.join(Utilities.getAppPrefix(), "import", "*.gpx"))
-        for i, format in enumerate(files):
-            (filepath, filename) = os.path.split(format)
-            # (shortname, extension) = os.path.splitext(filename)
-            print('[%i] = %s' % (i, filename))
+        # print("Upload Tracks")
+        # files = glob.glob(
+        #     os.path.join(Utilities.getAppPrefix(), "import", "*.gpx"))
+        # for i, format in enumerate(files):
+        #     (filepath, filename) = os.path.split(format)
+        #     # (shortname, extension) = os.path.splitext(filename)
+        #     print('[%i] = %s' % (i, filename))
 
-        fileId = input("enter number(s) [space delimited] ").strip()
-        fileIds = fileId.split(' ')
+        # fileId = input("enter number(s) [space delimited] ").strip()
+        # fileIds = fileId.split(' ')
 
-        filesToBeImported = []
-        for fileId in fileIds:
-            filesToBeImported.append(files[int(fileId)])
+        # filesToBeImported = []
+        # for fileId in fileIds:
+        #     filesToBeImported.append(files[int(fileId)])
 
-        tracks = self.computer.import_tracks(filesToBeImported)
-        results = self.computer.set_tracks(tracks)
-        print('successfully uploaded tracks ', str(results))
+        # tracks = self.computer.import_tracks(filesToBeImported)
+        # results = self.computer.set_tracks(tracks)
+        # print('successfully uploaded tracks ', str(results))
 
     def upload_waypoints(self):
         print("Sorry! Uploading way points is not yet implemented.")

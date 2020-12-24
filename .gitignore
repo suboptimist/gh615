@@ -1,11 +1,13 @@
 build
 dist
+venv
 .cache
 .project
 .pydevproject
 .coverage
 .eggs
 .settings
+settings.json
 sq100.egg-info
 *.gpx
 *.log

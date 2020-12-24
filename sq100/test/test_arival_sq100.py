@@ -222,16 +222,16 @@ def test_unpack_lap_info_parameter():
             date.hour, date.minute, date.second,
             no_track_points,
             round(duration.total_seconds() * 10), distance,
-            no_laps, b'', 0xAA) +
-        struct.pack(
+            no_laps, b'', 0xAA)
+        + struct.pack(
             ">3I3H2B2H13s2H",
             round(lap_1_duration.total_seconds() * 10),
             round(lap_1_total_time.total_seconds() * 10),
             lap_1_distance, lap_1_calories,
             0, lap_1_max_speed, lap_1_max_heart_rate, lap_1_avg_heart_rate,
             lap_1_min_height, lap_1_max_height, b'',
-            lap_1_first_index, lap_1_last_index) +
-        struct.pack(
+            lap_1_first_index, lap_1_last_index)
+        + struct.pack(
             ">3I3H2B2H13s2H",
             round(lap_2_duration.total_seconds() * 10),
             round(lap_2_total_time.total_seconds() * 10),
@@ -448,8 +448,8 @@ def test_unpack_track_list_parameter():
             track_0_memory_block_index,
             0,
             track_0_id,
-            0) +
-        struct.pack(
+            0)
+        + struct.pack(
             ">6B3I5HB",
             track_1_date.year - 2000, track_1_date.month, track_1_date.day,
             track_1_date.hour, track_1_date.minute, track_1_date.second,
@@ -513,8 +513,8 @@ def test_unpack_track_point_parameter():
             track_no_track_points,
             round(track_duration.total_seconds() * 10),
             track_distance,
-            track_no_laps, session_start, session_last, 0x55) +
-        struct.pack(
+            track_no_laps, session_start, session_last, 0x55)
+        + struct.pack(
             ">2i3HB2H6s",
             int(round(tp_0_latitude * 1e6)),
             int(round(tp_0_longitude * 1e6)),
@@ -524,8 +524,8 @@ def test_unpack_track_point_parameter():
             tp_0_heart_rate,
             0,
             int(round(tp_0_interval.total_seconds() * 10)),
-            b'') +
-        struct.pack(
+            b'')
+        + struct.pack(
             ">2i3HB2H6s",
             int(round(tp_1_latitude * 1e6)),
             int(round(tp_1_longitude * 1e6)),
