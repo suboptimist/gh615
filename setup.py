@@ -52,6 +52,14 @@ setup(
         'Topic :: Utilities',
     ],
     extras_require={
-        'testing': ['pytest'],
+        'dev': [
+            'autopep8',
+            "mock",
+            'mypy',
+            'pip-tools',
+            'pytest',
+            'pytest-flake8',
+            'pytest-cov'
+        ]
     }
 )
