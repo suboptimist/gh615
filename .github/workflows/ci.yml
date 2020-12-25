@@ -27,3 +27,6 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
+      - name: Lint with mypy
+        run: |
+          mypy .
