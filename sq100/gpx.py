@@ -30,7 +30,7 @@ tpex_ns_def = "https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd"
 
 
 def _create_bounds_element(value, ns=gpx_ns, tag='bounds',):
-    elem = etree.Element(etree.QName(ns, tag))
+    elem = etree.Element(str(etree.QName(ns, tag)))
     elem.set("minlat", str(value.min.latitude))
     elem.set("minlon", str(value.min.longitude))
     elem.set("maxlat", str(value.max.latitude))
@@ -49,7 +49,7 @@ def _create_decimal_element(ns, tag, value):
 
 
 def _create_garmin_track_point_extension_element(track_point, ns=tpex_ns):
-    trkptex = etree.Element(etree.QName(ns, "TrackPointExtension"))
+    trkptex = etree.Element(str(etree.QName(ns, "TrackPointExtension")))
     trkptex.append(
         _create_decimal_element(tpex_ns, "hr", track_point.heart_rate))
     return trkptex
@@ -59,7 +59,7 @@ def _create_gpx_element(tracks):
     gpx = etree.Element('gpx')
     gpx.set('version', '1.1')
     gpx.set("creator", 'https://github.com/tnachstedt/sq100')
-    gpx.set(etree.QName(xsi_ns, "schemaLocation"),
+    gpx.set(str(etree.QName(xsi_ns, "schemaLocation")),
             "%s %s %s %s" % (gpx_ns, gpx_ns_def, tpex_ns, tpex_ns_def))
     gpx.append(_create_metadata_element(bounds=calc_tracks_bounds(tracks)))
     for i, track in enumerate(tracks):
@@ -73,7 +73,7 @@ def _create_metadata_element(
         description="Tracks export from the SQ100 application",
         date=datetime.datetime.now(),
         ns=gpx_ns, tag='metadata'):
-    metadata = etree.Element(etree.QName(ns, tag))
+    metadata = etree.Element(str(etree.QName(ns, tag)))
     metadata.append(
         _create_string_element(ns=ns, tag="name", value=name))
     metadata.append(
@@ -84,14 +84,14 @@ def _create_metadata_element(
 
 
 def _create_string_element(ns, tag, value):
-    elem = etree.Element(etree.QName(ns, tag))
+    elem = etree.Element(str(etree.QName(ns, tag)))
     elem.text = value
     return elem
 
 
 def _create_track_element(track, number, src="Arival SQ100 computer",
                           ns=gpx_ns, tag="trk"):
-    elem = etree.Element(etree.QName(ns, tag))
+    elem = etree.Element(str(etree.QName(ns, tag)))
     elem.append(_create_string_element(gpx_ns, "name", track.name))
     elem.append(_create_string_element(gpx_ns, "cmt", "id=%s" % track.id))
     elem.append(_create_string_element(gpx_ns, "desc", track.description))
@@ -102,7 +102,7 @@ def _create_track_element(track, number, src="Arival SQ100 computer",
 
 
 def _create_track_point_element(track_point, ns=gpx_ns, tag='trkpt'):
-    trkpt = etree.Element(etree.QName(ns, tag))
+    trkpt = etree.Element(str(etree.QName(ns, tag)))
     trkpt.set("lat", str(track_point.latitude))
     trkpt.set("lon", str(track_point.longitude))
     trkpt.append(_create_decimal_element(gpx_ns, "ele", track_point.altitude))
@@ -113,14 +113,14 @@ def _create_track_point_element(track_point, ns=gpx_ns, tag='trkpt'):
 
 def _create_track_point_extensions_element(track_point, ns=gpx_ns,
                                            tag="extensions"):
-    extensions = etree.Element(etree.QName(ns, tag))
+    extensions = etree.Element(str(etree.QName(ns, tag)))
     extensions.append(
         _create_garmin_track_point_extension_element(track_point))
     return extensions
 
 
 def _create_track_segment_element(track, ns=gpx_ns, tag="trkseg"):
-    segment = etree.Element(etree.QName(ns, tag))
+    segment = etree.Element(str(etree.QName(ns, tag)))
     for track_point in track.track_points:
         segment.append(_create_track_point_element(track_point))
     return segment

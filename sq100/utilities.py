@@ -18,6 +18,8 @@
 
 from sq100.data_types import CoordinateBounds, Point
 
+from typing import Set
+
 
 def calc_tracks_bounds(tracks):
     track_bounds = [t.bounds() for t in tracks]
@@ -31,7 +33,7 @@ def calc_tracks_bounds(tracks):
 
 
 def parse_range(astr):
-    result = set()
+    result: Set[int] = set()
     for part in astr.split(','):
         x = part.split('-')
         result.update(range(int(x[0]), int(x[-1]) + 1))
