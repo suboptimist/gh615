@@ -33,6 +33,6 @@ jobs:
       - name: Transmit coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
-          file: ./.coverage
+          file: ./coverage.xml
           fail_ci_if_error: true
           verbose: true

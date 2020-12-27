@@ -4,7 +4,7 @@ venv
 .cache
 .project
 .pydevproject
-.coverage
+coverage.xml
 .eggs
 .settings
 settings.json
