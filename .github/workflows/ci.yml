@@ -1,4 +1,4 @@
-name: SQ100 CI workflow
+name: CI
 
 on: [push]
 
