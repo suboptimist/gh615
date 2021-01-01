@@ -175,10 +175,10 @@ def test_query(mock_serial_connection, mock_unpack, mock_create):
 @patch.object(ArivalSQ100, "get_track_list")
 def test_track_ids_to_memory_indices(mock_get_track_list):
     mock_get_track_list.return_value = [
-        Track(track_id=1, memory_block_index=10),
-        Track(track_id=3, memory_block_index=200),
-        Track(track_id=10, memory_block_index=35),
-        Track(track_id=8, memory_block_index=111)]
+        Track(id=1, memory_block_index=10),
+        Track(id=3, memory_block_index=200),
+        Track(id=10, memory_block_index=35),
+        Track(id=8, memory_block_index=111)]
     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
     memory_indices = sq100._track_ids_to_memory_indices([3, 1, 10])
     assert memory_indices == [200, 10, 35]

@@ -37,7 +37,7 @@ def test_track_compare_to():
                min_height=12,
                no_laps=4,
                no_track_points=20,
-               track_id=2)
+               id=2)
 
     t2 = copy.copy(t1)
     assert(t1.compatible_to(t2) is True)
@@ -59,12 +59,3 @@ def test_track_compare_to():
     t2.max_heart_rate = t1.max_heart_rate - 1
     assert(t1.compatible_to(t2) is False)
     assert(t2.compatible_to(t1) is False)
-
-
-def test_track_str():
-    t = Track(date=datetime.datetime(1987, 12, 19, 15, 30, 20),
-              name='my track', max_heart_rate=199, laps=["a", "b"])
-    expected = (
-        "Track(date: 1987-12-19 15:30:20, laps: 2 items, max_heart_rate: 199, "
-        "name: my track, track_points: 0 items)")
-    assert t.__str__() == expected

@@ -202,7 +202,7 @@ class ArivalSQ100(object):
             distance=header.distance,
             no_laps=header.no_laps,
             memory_block_index=header.memory_block_index,
-            track_id=header.id,
+            id=header.id,
             calories=info.calories,
             max_speed=info.max_speed,
             max_heart_rate=info.max_heart_rate,
@@ -232,7 +232,7 @@ class ArivalSQ100(object):
                 distance=t.distance,
                 no_track_points=t.no_points,
                 memory_block_index=t.memory_block_index,
-                track_id=t.id)
+                id=t.id)
             for t in track_headers]
         return tracks
 

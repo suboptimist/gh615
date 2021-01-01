@@ -28,8 +28,8 @@ def calc_tracks_bounds(tracks):
     max_latitude = max([b.max.latitude for b in track_bounds])
     max_longitude = max([b.max.longitude for b in track_bounds])
     return CoordinateBounds(
-        minimum=Point(latitude=min_latitude, longitude=min_longitude),
-        maximum=Point(latitude=max_latitude, longitude=max_longitude))
+        min=Point(latitude=min_latitude, longitude=min_longitude),
+        max=Point(latitude=max_latitude, longitude=max_longitude))
 
 
 def parse_range(astr):

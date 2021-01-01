@@ -26,8 +26,8 @@ from sq100.data_types import CoordinateBounds, Point, Track, TrackPoint
 
 def test_create_bounds_element():
     bounds = CoordinateBounds(
-        minimum=Point(latitude=10.8, longitude=-8.1),
-        maximum=Point(latitude=25.0, longitude=-2.9))
+        min=Point(latitude=10.8, longitude=-8.1),
+        max=Point(latitude=25.0, longitude=-2.9))
     elem = gpx._create_bounds_element(value=bounds)
     assert float(elem.get("minlat")) == bounds.min.latitude
     assert float(elem.get("minlon")) == bounds.min.longitude
@@ -118,7 +118,7 @@ def test_create_string_element():
 def test_create_track_element(mock_create_segment_element):
     ns = '{%s}' % gpx.gpx_ns
     mock_create_segment_element.return_value = etree.Element(ns + "trkseg")
-    track = Track(name="timo", track_id="5", description="my track")
+    track = Track(name="timo", id=5, description="my track")
     src = "My heart rate computer"
     number = 10
     elem = gpx._create_track_element(track=track, number=number, src=src)
