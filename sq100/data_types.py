@@ -16,10 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
+from typing import List, Any
 
 
 @dataclass
@@ -71,7 +73,7 @@ class Track:
     distance: float = None
     duration: datetime.timedelta = None
     id: int = None
-    laps: int = None
+    laps: List[Lap] = None
     max_heart_rate: float = None
     max_height: float = None
     max_speed: float = None
@@ -83,7 +85,7 @@ class Track:
     track_id: int = None
     track_points: List[TrackPoint] = field(default_factory=list)
 
-    def bounds(self):
+    def bounds(self) -> CoordinateBounds:
         return CoordinateBounds(
             min=Point(
                 latitude=min(t.latitude for t in self.track_points),
@@ -92,8 +94,8 @@ class Track:
                 latitude=max(t.latitude for t in self.track_points),
                 longitude=max(t.longitude for t in self.track_points)))
 
-    def compatible_to(self, other):
-        def c(a, b):
+    def compatible_to(self, other: Track) -> bool:
+        def c(a: Any, b: Any) -> bool:
             return a is None or b is None or a == b
         return (
             c(self.ascending_height, other.ascending_height)
@@ -112,10 +114,10 @@ class Track:
             and c(self.no_laps, other.no_laps)
             and c(self.no_track_points, other.no_track_points))
 
-    def complete(self):
+    def complete(self) -> bool:
         return len(self.track_points) == self.no_track_points
 
-    def update_track_point_times(self):
+    def update_track_point_times(self) -> None:
         interval = datetime.timedelta(0)
         for tp in self.track_points:
             interval += tp.interval

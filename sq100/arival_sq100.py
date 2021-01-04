@@ -22,6 +22,8 @@ import datetime
 import logging
 import struct
 
+from typing import List, NamedTuple, Tuple
+
 from sq100.exceptions import SQ100MessageException
 from sq100.serial_connection import SerialConnection
 from sq100.data_types import Lap, Track, TrackPoint
@@ -29,24 +31,28 @@ from sq100.data_types import Lap, Track, TrackPoint
 
 logger = logging.getLogger(__name__)
 
-Message = collections.namedtuple("Message", [
-    'command', 'payload_length', 'parameter', 'checksum'])
+
+class Message(NamedTuple):
+    command: int
+    payload_length: int
+    parameter: bytes
+    checksum: int
 
 
 class ArivalSQ100(object):
 
-    def __init__(self, port, baudrate, timeout):
+    def __init__(self, port: str, baudrate: int, timeout: float):
         self.serial = SerialConnection(
             port=port, baudrate=baudrate, timeout=timeout)
 
     @staticmethod
-    def _calc_checksum(payload):
+    def _calc_checksum(payload: bytes) -> int:
         payload_len = struct.pack("H", len(payload))
         checksum = functools.reduce(lambda x, y: x ^ y, payload_len + payload)
         return checksum
 
     @staticmethod
-    def _create_message(command, parameter=b''):
+    def _create_message(command: int, parameter: bytes = b'') -> bytes:
         start_sequence = 0x02
         payload = bytes([command]) + parameter
         payload_length = len(payload)
@@ -55,16 +61,16 @@ class ArivalSQ100(object):
                            start_sequence, payload_length, payload, checksum)
 
     @staticmethod
-    def _is_get_tracks_finish_message(msg):
+    def _is_get_tracks_finish_message(msg: Message) -> bool:
         return msg.command == 0x8a
 
     @staticmethod
-    def _pack_get_tracks_parameter(memory_indices):
+    def _pack_get_tracks_parameter(memory_indices: List[int]) -> bytes:
         no_tracks = len(memory_indices)
         return struct.pack(">H%dH" % no_tracks, no_tracks, *memory_indices)
 
     @staticmethod
-    def _process_get_tracks_lap_info_msg(track, msg):
+    def _process_get_tracks_lap_info_msg(track: Track, msg: Message) -> Track:
         logger.debug("processing get_tracks lap info msg")
         logger.debug("track: %s", track)
         trackhead, laps = ArivalSQ100._unpack_lap_info_parameter(msg.parameter)
@@ -76,14 +82,15 @@ class ArivalSQ100(object):
         return track
 
     @staticmethod
-    def _process_get_tracks_track_info_msg(msg):
+    def _process_get_tracks_track_info_msg(msg: Message) -> Track:
         logger.debug("processing get_tracks track info msg")
         track = ArivalSQ100._unpack_track_info_parameter(msg.parameter)
         logger.debug("new track: %s", track)
         return track
 
     @staticmethod
-    def _process_get_tracks_track_points_msg(track, msg):
+    def _process_get_tracks_track_points_msg(
+            track: Track, msg: Message) -> Track:
         logger.debug("processing get_track track points msg")
         logger.debug("track = %s", track)
         trackhead, session_indices, track_points = (
@@ -107,7 +114,7 @@ class ArivalSQ100(object):
         track.track_points.extend(track_points)
         return track
 
-    def _query(self, command, parameter=b''):
+    def _query(self, command: int, parameter: bytes = b'') -> Message:
         self.serial.write(self._create_message(command, parameter))
         "first, read three bytes to determine payload"
         begin = self.serial.read(3)
@@ -115,14 +122,15 @@ class ArivalSQ100(object):
         rest = self.serial.read(payload + 1)  # +1 for checksum
         return self._unpack_message(begin + rest)
 
-    def _track_ids_to_memory_indices(self, track_ids):
+    def _track_ids_to_memory_indices(self, track_ids: List[int]) -> List[int]:
         tracks = self.get_track_list()
         index = {t.id: t.memory_block_index for t in tracks}
         memory_indices = [index[track_id] for track_id in track_ids]
         return memory_indices
 
     @staticmethod
-    def _unpack_lap_info_parameter(parameter):
+    def _unpack_lap_info_parameter(
+            parameter: bytes) -> Tuple[Track, List[Lap]]:
         TrackHeader = collections.namedtuple('TrackHeader', [
             'year', 'month', 'day', 'hour', 'minute', 'second',
             'no_points', 'duration', 'distance',
@@ -163,7 +171,7 @@ class ArivalSQ100(object):
         return track, laps
 
     @staticmethod
-    def _unpack_message(message):
+    def _unpack_message(message: bytes) -> Message:
         msg = Message._make(
             struct.unpack(">BH%dsB" % (len(message) - 4), message))
         if msg.payload_length != len(msg.parameter):
@@ -176,7 +184,7 @@ class ArivalSQ100(object):
         return msg
 
     @staticmethod
-    def _unpack_track_info_parameter(parameter):
+    def _unpack_track_info_parameter(parameter: bytes) -> Track:
         TrackHeader = collections.namedtuple('TrackHeader', [
             'year', 'month', 'day', 'hour', 'minute', 'second',
             'no_points', 'duration', 'distance',
@@ -214,7 +222,7 @@ class ArivalSQ100(object):
         return track
 
     @staticmethod
-    def _unpack_track_list_parameter(parameter):
+    def _unpack_track_list_parameter(parameter: bytes) -> List[Track]:
         TrackHeader = collections.namedtuple('TrackHeader', [
             'year', 'month', 'day', 'hour', 'minute', 'second',
             'no_points', 'duration', 'distance',
@@ -237,7 +245,9 @@ class ArivalSQ100(object):
         return tracks
 
     @staticmethod
-    def _unpack_track_point_parameter(parameter):
+    def _unpack_track_point_parameter(
+            parameter: bytes
+    ) -> Tuple[Track, Tuple[int, ...], List[TrackPoint]]:
         TrackHeader = collections.namedtuple('TrackHeader', [
             'year', 'month', 'day', 'hour', 'minute', 'second',
             'no_points', 'duration', 'distance',
@@ -273,19 +283,19 @@ class ArivalSQ100(object):
             for t in trackpoint_data]
         return track, session_indices, trackpoints
 
-    def connect(self):
+    def connect(self) -> None:
         self.serial.connect()
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         self.serial.disconnect()
 
-    def get_track_list(self):
+    def get_track_list(self) -> List[Track]:
         msg = self._query(0x78)
         tracks = self._unpack_track_list_parameter(msg.parameter)
         logger.info('received list of %i tracks' % len(tracks))
         return tracks
 
-    def get_tracks(self, track_ids):
+    def get_tracks(self, track_ids: List[int]) -> List[Track]:
         memory_indices = self._track_ids_to_memory_indices(track_ids)
         params = self._pack_get_tracks_parameter(memory_indices)
         msg = self._query(0x80, params)

@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sq100.data_types import CoordinateBounds, Point
+from sq100.data_types import CoordinateBounds, Point, Track
 
-from typing import Set
+from typing import List, Set
 
 
-def calc_tracks_bounds(tracks):
+def calc_tracks_bounds(tracks: List[Track]) -> CoordinateBounds:
     track_bounds = [t.bounds() for t in tracks]
     min_latitude = min([b.min.latitude for b in track_bounds])
     min_longitude = min([b.min.longitude for b in track_bounds])
@@ -32,7 +32,7 @@ def calc_tracks_bounds(tracks):
         max=Point(latitude=max_latitude, longitude=max_longitude))
 
 
-def parse_range(astr):
+def parse_range(astr: str) -> List[int]:
     result: Set[int] = set()
     for part in astr.split(','):
         x = part.split('-')

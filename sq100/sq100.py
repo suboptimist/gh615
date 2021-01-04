@@ -23,6 +23,7 @@ import argparse
 import cmd
 import configparser
 import logging
+from typing import List
 import tabulate
 
 from sq100.arival_sq100 import ArivalSQ100
@@ -33,17 +34,22 @@ from sq100.utilities import parse_range
 logging.basicConfig(filename="sq100.log", level=logging.DEBUG)
 
 
-class SQ100(object):
+class SQ100:
 
-    def __init__(self):
-        config = configparser.SafeConfigParser()
+    computer: ArivalSQ100
+    serial_baudrate: int
+    serial_comport: str
+    serial_timeout: float
+
+    def __init__(self) -> None:
+        config = configparser.ConfigParser()
         config.read('sq100.cfg')
         self.serial_comport = config['serial'].get("comport")
-        self.serial_baudrate = config['serial'].get('baudrate')
-        self.serial_timeout = config['serial'].get('timeout')
+        self.serial_baudrate = config['serial'].getint('baudrate')
+        self.serial_timeout = config['serial'].getfloat('timeout')
         self.computer = None
 
-    def connect(self):
+    def connect(self) -> bool:
         self.computer = ArivalSQ100(port=self.serial_comport,
                                     baudrate=self.serial_baudrate,
                                     timeout=self.serial_timeout)
@@ -54,30 +60,24 @@ class SQ100(object):
             print("Connection to device failed! Check serial settings.")
             return False
 
-    def delete_all_tracks(self):
-        print("Sorry! Deleting all tracks is not yet implemented")
-        return
-        print("Delete all Tracks")
-        input("warning, DELETING ALL TRACKS").strip()
-        results = self.computer.delete_all_tracks()
-        print('Deleted all Tracks:', results)
+    # def delete_all_tracks(self) -> None:
+        # print("Delete all Tracks")
+        # input("warning, DELETING ALL TRACKS").strip()
+        # results = self.computer.delete_all_tracks()
+        # print('Deleted all Tracks:', results)
 
-    def delete_all_waypoints(self):
-        print("Sorry! Deleting all waypoints is not yet implemented")
-        return
-        print("Delete all Waypoints")
-        input("WARNING DELETING ALL WAYPOINTS").strip()
-        results = self.computer.delete_all_waypoints()
-        print('Formatted all Waypoints:', results)
+    # def delete_all_waypoints(self):
+    #     print("Delete all Waypoints")
+    #     input("WARNING DELETING ALL WAYPOINTS").strip()
+    #     results = self.computer.delete_all_waypoints()
+    #     print('Formatted all Waypoints:', results)
 
-    def device_info(self):
-        print('Sorry! Showing Device Info is not yet implemented.')
-        return
-        unit = self.computer.getUnitInformation()
-        print("* %s waypoints on watch" % unit['waypoint_count'])
-        print("* %s trackpoints on watch" % unit['trackpoint_count'])
+    # def device_info(self):
+    #     unit = self.computer.getUnitInformation()
+    #     print("* %s waypoints on watch" % unit['waypoint_count'])
+    #     print("* %s trackpoints on watch" % unit['trackpoint_count'])
 
-    def download_latest(self):
+    def download_latest(self) -> None:
         track_headers = self.computer.get_track_list()
         if len(track_headers) == 0:
             print('no tracks found')
@@ -89,7 +89,9 @@ class SQ100(object):
         tracks_to_gpx(
             tracks, "track-%s.gpx" % latest.date.strftime("%Y-%m-%d-%H-%M-%S"))
 
-    def download_tracks(self, track_ids=[], merge=False):
+    def download_tracks(
+        self, track_ids: List[int] = [], merge: bool = False
+    ) -> None:
         if len(track_ids) == 0:
             return
         tracks = self.computer.get_tracks(track_ids)
@@ -99,19 +101,13 @@ class SQ100(object):
         for track in tracks:
             tracks_to_gpx([track], "downloaded_tracks-%s.gpx" % track.id)
 
-    def download_waypoints(self):
-        print("Sorry! Downloading way points is not yet implemented.")
-        return
-        print("Download Waypoints")
-        waypoints = self.computer.get_waypoints()
-        results = self.computer.exportWaypoints(waypoints)
-        print('exported Waypoints to', results)
+    # def download_waypoints(self):
+    #     print("Download Waypoints")
+    #     waypoints = self.computer.get_waypoints()
+    #     results = self.computer.exportWaypoints(waypoints)
+    #     print('exported Waypoints to', results)
 
-    def export_all_tracks(self):
-        print("Sorry! Exporting all tracks is not yet implemented.")
-        return
-
-    def show_tracklist(self):
+    def show_tracklist(self) -> None:
         tracks = self.computer.get_track_list()
         if tracks:
             table = [[track.id, track.date, track.distance, track.duration,
@@ -124,35 +120,28 @@ class SQ100(object):
         else:
             print('no tracks found')
 
-    def upload_tracks(self):
-        print("Sorry! Uploading tracks is not yet implemented.")
-        return
-        # print("Upload Tracks")
-        # files = glob.glob(
-        #     os.path.join(Utilities.getAppPrefix(), "import", "*.gpx"))
-        # for i, format in enumerate(files):
-        #     (filepath, filename) = os.path.split(format)
-        #     # (shortname, extension) = os.path.splitext(filename)
-        #     print('[%i] = %s' % (i, filename))
+    # def upload_tracks(self):
+    #     print("Upload Tracks")
+    #     files = glob.glob(
+    #         os.path.join(Utilities.getAppPrefix(), "import", "*.gpx"))
+    #     for i, format in enumerate(files):
+    #         (filepath, filename) = os.path.split(format)
+    #         # (shortname, extension) = os.path.splitext(filename)
+    #         print('[%i] = %s' % (i, filename))
+    #     fileId = input("enter number(s) [space delimited] ").strip()
+    #     fileIds = fileId.split(' ')
+    #     filesToBeImported = []
+    #     for fileId in fileIds:
+    #         filesToBeImported.append(files[int(fileId)])
+    #     tracks = self.computer.import_tracks(filesToBeImported)
+    #     results = self.computer.set_tracks(tracks)
+    #     print('successfully uploaded tracks ', str(results))
 
-        # fileId = input("enter number(s) [space delimited] ").strip()
-        # fileIds = fileId.split(' ')
-
-        # filesToBeImported = []
-        # for fileId in fileIds:
-        #     filesToBeImported.append(files[int(fileId)])
-
-        # tracks = self.computer.import_tracks(filesToBeImported)
-        # results = self.computer.set_tracks(tracks)
-        # print('successfully uploaded tracks ', str(results))
-
-    def upload_waypoints(self):
-        print("Sorry! Uploading way points is not yet implemented.")
-        return
-        print("Upload Waypoints")
-        waypoints = self.computer.import_waypoints()
-        results = self.computer.set_waypoints(waypoints)
-        print('Imported %i Waypoints' % results)
+    # def upload_waypoints(self):
+    #     print("Upload Waypoints")
+    #     waypoints = self.computer.import_waypoints()
+    #     results = self.computer.set_waypoints(waypoints)
+    #     print('Imported %i Waypoints' % results)
 
 
 gpl_disclaimer = """
@@ -185,7 +174,7 @@ class SQ100Shell(cmd.Cmd):
     intro = welcome_msg
     prompt = '(sq100)'
 
-    def __init__(self, sq100):
+    def __init__(self, sq100: SQ100):
         super().__init__()
         self.sq100 = sq100
 
@@ -197,7 +186,7 @@ class SQ100Shell(cmd.Cmd):
 #         "delete all waypoints on device"
 #         self.sq100.delete_all_waypoints()
 
-    def do_download(self, arg):
+    def do_download(self, arg: str) -> None:
         "export selected tracks into file: export 2,5"
         if arg == "latest":
             self.sq100.download_latest()
@@ -209,14 +198,14 @@ class SQ100Shell(cmd.Cmd):
 #         "export all tracks"
 #         self.sq100.export_all_tracks()
 
-    def do_license(self, arg):
+    def do_license(self, arg: str) -> None:
         print(gpl_disclaimer)
 
-    def do_list(self, arg):
+    def do_list(self, arg: str) -> None:
         "show list of all tracks on the device: list"
         self.sq100.show_tracklist()
 
-    def do_quit(self, arg):
+    def do_quit(self, arg: str) -> bool:
         "Exit the application"
         return True
 
@@ -234,7 +223,7 @@ class SQ100Shell(cmd.Cmd):
 #         self.sq100.upload_waypoints()
 
 
-def main():
+def main() -> None:
     sq100 = SQ100()
 
     description = (

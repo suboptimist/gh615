@@ -20,7 +20,7 @@ import logging
 import serial
 
 from sq100.exceptions import SQ100SerialException
-
+from typing import cast, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,11 @@ logger = logging.getLogger(__name__)
 class SerialConnection():
     _sleep = 2
 
-    def __init__(self, baudrate=None, port=None, timeout=None):
+    def __init__(
+            self,
+            baudrate: int = None,
+            port: str = None,
+            timeout: float = None):
         self.serial = serial.Serial()
         if baudrate is not None:
             self.baudrate = baudrate
@@ -38,33 +42,33 @@ class SerialConnection():
             self.timeout = timeout
 
     @property
-    def baudrate(self):
-        return self.serial.baudrate
+    def baudrate(self) -> int:
+        return cast(int, self.serial.baudrate)
 
     @baudrate.setter
-    def baudrate(self, b):
+    def baudrate(self, b: int) -> None:
         logger.debug("setting baudrate to %s", b)
         self.serial.baudrate = b
 
     @property
-    def port(self):
-        return self.serial.port
+    def port(self) -> str:
+        return cast(str, self.serial.port)
 
     @port.setter
-    def port(self, p):
+    def port(self, p: str) -> None:
         logger.debug("setting port to %s", p)
         self.serial.port = p
 
     @property
-    def timeout(self):
-        return self.serial.timeout
+    def timeout(self) -> Optional[float]:
+        return cast(Optional[float], self.serial.timeout)
 
     @timeout.setter
-    def timeout(self, t):
+    def timeout(self, t: float) -> None:
         logger.debug("setting port to %s", t)
         self.serial.timeout = t
 
-    def connect(self):
+    def connect(self) -> None:
         try:
             self.serial.open()
             logger.debug("serial connection on %s", self.serial.portstr)
@@ -72,12 +76,12 @@ class SerialConnection():
             logger.critical("error establishing serial connection")
             raise SQ100SerialException
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """disconnect the serial connection"""
         self.serial.close()
         logger.debug("serial connection closed")
 
-    def write(self, command):
+    def write(self, command: bytes) -> None:
         logger.debug("writing data: %s", command)
         try:
             self.serial.write(command)
@@ -85,12 +89,12 @@ class SerialConnection():
             logger.critical("write timeout occured")
             raise SQ100SerialException
 
-    def read(self, size=3000):
+    def read(self, size: int = 3000) -> bytes:
         data = self.serial.read(size)
         logger.debug("reading data:: %s", data)
-        return data
+        return cast(bytes, data)
 
-    def query(self, command):
+    def query(self, command: bytes) -> Optional[bytes]:
         for attempt in range(3):
             self.write(command)
             data = self.read()
