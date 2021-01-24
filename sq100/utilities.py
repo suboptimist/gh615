@@ -18,11 +18,14 @@
 
 from sq100.data_types import CoordinateBounds, Point, Track
 
-from typing import List, Set
+from typing import List, Optional, Set
 
 
-def calc_tracks_bounds(tracks: List[Track]) -> CoordinateBounds:
-    track_bounds = [t.bounds() for t in tracks]
+def calc_tracks_bounds(tracks: List[Track]) -> Optional[CoordinateBounds]:
+    all_track_bounds = [t.bounds() for t in tracks]
+    track_bounds = [t for t in all_track_bounds if t is not None]
+    if len(track_bounds) == 0:
+        return None
     min_latitude = min([b.min.latitude for b in track_bounds])
     min_longitude = min([b.min.longitude for b in track_bounds])
     max_latitude = max([b.max.latitude for b in track_bounds])

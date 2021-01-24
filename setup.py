@@ -56,7 +56,8 @@ setup(
             'pip-tools',
             'pytest',
             'pytest-flake8',
-            'pytest-cov'
+            'pytest-cov',
+            'pytest-mock',
         ]
     }
 )

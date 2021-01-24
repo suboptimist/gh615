@@ -4,6 +4,7 @@
 #
 #    pip-compile requirements.in
 #
+-e file:///Users/timo/workspace/sq100  # via -r requirements.in
 attrs==20.3.0             # via pytest
 autopep8==1.5.4           # via sq100
 click==7.1.2              # via pip-tools
@@ -24,7 +25,8 @@ pyparsing==2.4.7          # via packaging
 pyserial==3.5             # via sq100
 pytest-cov==2.10.1        # via sq100
 pytest-flake8==1.0.7      # via sq100
-pytest==6.2.1             # via pytest-cov, pytest-flake8, sq100
+pytest-mock==3.5.0        # via sq100
+pytest==6.2.1             # via pytest-cov, pytest-flake8, pytest-mock, sq100
 six==1.15.0               # via pip-tools
 tabulate==0.8.7           # via sq100
 toml==0.10.2              # via autopep8, pytest

@@ -16,67 +16,44 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import annotations
+
 import logging
 import serial
+from dataclasses import dataclass
+
+from typing import Any, cast, Optional
 
 from sq100.exceptions import SQ100SerialException
-from typing import cast, Optional
 
 logger = logging.getLogger(__name__)
 
 
-class SerialConnection():
-    _sleep = 2
+@dataclass
+class SerialConfig:
+    port: str
+    baudrate: int
+    timeout: float
 
-    def __init__(
-            self,
-            baudrate: int = None,
-            port: str = None,
-            timeout: float = None):
-        self.serial = serial.Serial()
-        if baudrate is not None:
-            self.baudrate = baudrate
-        if port is not None:
-            self.port = port
-        if timeout is not None:
-            self.timeout = timeout
 
-    @property
-    def baudrate(self) -> int:
-        return cast(int, self.serial.baudrate)
+class SerialConnection:
+    def __init__(self, config: SerialConfig):
+        self.serial = serial.Serial(
+            baudrate=config.baudrate,
+            port=config.port,
+            timeout=config.timeout)
 
-    @baudrate.setter
-    def baudrate(self, b: int) -> None:
-        logger.debug("setting baudrate to %s", b)
-        self.serial.baudrate = b
-
-    @property
-    def port(self) -> str:
-        return cast(str, self.serial.port)
-
-    @port.setter
-    def port(self, p: str) -> None:
-        logger.debug("setting port to %s", p)
-        self.serial.port = p
-
-    @property
-    def timeout(self) -> Optional[float]:
-        return cast(Optional[float], self.serial.timeout)
-
-    @timeout.setter
-    def timeout(self, t: float) -> None:
-        logger.debug("setting port to %s", t)
-        self.serial.timeout = t
-
-    def connect(self) -> None:
+    def __enter__(self) -> SerialConnection:
         try:
             self.serial.open()
-            logger.debug("serial connection on %s", self.serial.portstr)
+            logger.debug("serial connection established on %s",
+                         self.serial.portstr)
+            return self
         except serial.SerialException:
             logger.critical("error establishing serial connection")
             raise SQ100SerialException
 
-    def disconnect(self) -> None:
+    def __exit__(self, *_: Any) -> None:
         """disconnect the serial connection"""
         self.serial.close()
         logger.debug("serial connection closed")
@@ -102,16 +79,3 @@ class SerialConnection():
                 return data
             logger.debug("no data at serial port at attempt %d", attempt)
         raise SQ100SerialException("query failed")
-
-#     def _diagnostic(self):
-#         """check if a connection can be established"""
-#         try:
-#             self._connectSerial()
-#             self._querySerial('whoAmI')
-#             self._disconnectSerial()
-#             self.logger.info("serial connection established successfully")
-#             return True
-#         except SQ100SerialException:
-#             self.logger.info("error establishing serial port connection, "
-#                              "please check your config.ini file")
-#             return False

@@ -44,10 +44,13 @@ def _create_bounds_element(
 
 
 def _create_datetime_element(
-    ns: str, tag: str, value: datetime.datetime
+    ns: str,
+    tag: str,
+    value: datetime.datetime
 ) -> etree.Element:
-    if value.tzinfo is not None:
-        value = (value - value.utcoffset()).replace(tzinfo=None)
+    utcoffset = value.utcoffset()
+    if utcoffset is not None:
+        value = (value - utcoffset).replace(tzinfo=None)
     return _create_string_element(ns, tag, "%sZ" % value.isoformat())
 
 
@@ -69,7 +72,9 @@ def _create_gpx_element(tracks: List[Track]) -> etree.Element:
     gpx.set("creator", 'https://github.com/tnachstedt/sq100')
     gpx.set(str(etree.QName(xsi_ns, "schemaLocation")),
             "%s %s %s %s" % (gpx_ns, gpx_ns_def, tpex_ns, tpex_ns_def))
-    gpx.append(_create_metadata_element(bounds=calc_tracks_bounds(tracks)))
+    bounds = calc_tracks_bounds(tracks)
+    if bounds is not None:
+        gpx.append(_create_metadata_element(bounds=bounds))
     for i, track in enumerate(tracks):
         gpx.append(_create_track_element(track=track, number=i))
     return gpx
@@ -107,12 +112,11 @@ def _create_track_element(
         tag: str = "trk"
 ) -> etree.Element:
     elem = etree.Element(str(etree.QName(ns, tag)))
-    elem.append(_create_string_element(gpx_ns, "name", track.name))
-    elem.append(_create_string_element(gpx_ns, "cmt", "id=%s" % track.id))
-    elem.append(_create_string_element(gpx_ns, "desc", track.description))
-    elem.append(_create_string_element(gpx_ns, "src", src))
-    elem.append(_create_decimal_element(gpx_ns, "number", number))
-    elem.append(_create_track_segment_element(track))
+    elem.append(_create_string_element(
+        ns=gpx_ns, tag="cmt", value="id=%s" % track.info.id))
+    elem.append(_create_string_element(ns=gpx_ns, tag="src", value=src))
+    elem.append(_create_decimal_element(ns=gpx_ns, tag="number", value=number))
+    elem.append(_create_track_segment_element(track.track_points))
     return elem
 
 
@@ -123,7 +127,10 @@ def _create_track_point_element(
     trkpt.set("lat", str(track_point.latitude))
     trkpt.set("lon", str(track_point.longitude))
     trkpt.append(_create_decimal_element(gpx_ns, "ele", track_point.altitude))
-    trkpt.append(_create_datetime_element(gpx_ns, "time", track_point.date))
+    # FIXME: obtain date from somewhere
+    # if track_point.date is not None:
+    #     trkpt.append(_create_datetime_element(
+    #         gpx_ns, "time", track_point.date))
     trkpt.append(_create_track_point_extensions_element(track_point))
     return trkpt
 
@@ -140,12 +147,12 @@ def _create_track_point_extensions_element(
 
 
 def _create_track_segment_element(
-        track: Track,
+        track_points: List[TrackPoint],
         ns: str = gpx_ns,
         tag: str = "trkseg"
 ) -> etree.Element:
     segment = etree.Element(str(etree.QName(ns, tag)))
-    for track_point in track.track_points:
+    for track_point in track_points:
         segment.append(_create_track_point_element(track_point))
     return segment
 

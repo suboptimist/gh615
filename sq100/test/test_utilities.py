@@ -22,7 +22,7 @@ from sq100.data_types import CoordinateBounds, Point, Track
 import sq100.utilities as utils
 
 
-def test_calc_tracks_bounds():
+def test_calc_tracks_bounds() -> None:
     tracks = [create_autospec(Track) for _ in range(3)]
     track_bounds = [
         CoordinateBounds(min=Point(-20, 5), max=Point(0, 11)),
