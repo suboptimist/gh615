@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 
 @dataclass
@@ -84,14 +84,3 @@ class CoordinateBounds:
 class Point:
     latitude: float
     longitude: float
-
-    # def bounds(self) -> Optional[CoordinateBounds]:
-    #     if len(self.track_points) == 0:
-    #         return None
-    #     return CoordinateBounds(
-    #         min=Point(
-    #             latitude=min(t.latitude for t in self.track_points),
-    #             longitude=min(t.longitude for t in self.track_points)),
-    #         max=Point(
-    #             latitude=max(t.latitude for t in self.track_points),
-    #             longitude=max(t.longitude for t in self.track_points)))

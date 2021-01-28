@@ -27,7 +27,19 @@ from pytest_mock import MockerFixture
 from sq100.test.dummies import make_track_info, make_track_points
 from sq100 import arival_sq100
 from sq100.exceptions import SQ100MessageException
-from sq100.data_types import Lap, Track, TrackInfo, TrackPoint
+from sq100.data_types import Lap, TrackInfo, TrackPoint
+
+
+def make_track_head(
+        date: datetime.datetime = datetime.datetime(1987, 12, 19),
+        duration: datetime.timedelta = datetime.timedelta(seconds=0),
+        no_laps: int = 0,
+        distance: int = 0,
+        no_track_points: int = 0,
+) -> arival_sq100.TrackHead:
+    return arival_sq100.TrackHead(
+        date=date, duration=duration, no_laps=no_laps,
+        distance=distance, no_track_points=no_track_points)
 
 
 def test_calc_checksum__returns_corect_value_for_simple_payload() -> None:
@@ -92,15 +104,22 @@ def test_pack_get_tracks_parameter__returns_correct_pack() -> None:
 
 def test_process_get_tracks_lap_info_msg__returns_correct_laps(
         mocker: MockerFixture) -> None:
-    track_info = make_track_info()
     msg = make_message(parameter=b'parameter')
     unpack_lap_info_mock = mocker.patch(
         'sq100.arival_sq100.unpack_lap_info_parameter')
     unpack_lap_info_mock.return_value = (
-        track_info, [make_lap(first_index=42)])
+        make_track_head(
+            date=datetime.datetime(1987, 12, 19),
+            duration=datetime.timedelta(seconds=4),
+            no_laps=1, distance=2, no_track_points=3),
+        [make_lap(first_index=42)])
 
     laps = arival_sq100.process_get_tracks_lap_info_msg(
-        expected_track_info=track_info, msg=msg)
+        expected_track_info=make_track_info(
+            date=datetime.datetime(1987, 12, 19),
+            duration=datetime.timedelta(seconds=4),
+            no_laps=1, distance=2, no_track_points=3),
+        msg=msg)
 
     assert len(laps) == 1
     assert laps[0].first_index == 42
@@ -109,16 +128,16 @@ def test_process_get_tracks_lap_info_msg__returns_correct_laps(
 
 def test_process_get_tracks_lap_info_msg__raises_if_tracks_are_incompatible(
         mocker: MockerFixture) -> None:
-    track_info = make_track_info(id=10)
     msg = make_message(parameter=b'parameter')
     unpack_lap_info_mock = mocker.patch(
         'sq100.arival_sq100.unpack_lap_info_parameter')
     unpack_lap_info_mock.return_value = (
-        make_track_info(id=20), [make_lap(first_index=42)])
+        make_track_head(no_laps=2), [make_lap(first_index=42)])
 
     with pytest.raises(SQ100MessageException):
         arival_sq100.process_get_tracks_lap_info_msg(
-            expected_track_info=track_info, msg=msg)
+            expected_track_info=make_track_info(no_laps=3),
+            msg=msg)
 
 
 def test_process_get_tracks_track_info_msg(mocker: MockerFixture) -> None:
@@ -157,16 +176,17 @@ def test_process_get_tracks_track_points_msg__returns_points(
 def test_process_get_tracks_track_points_msg__raises_if_track_is_incompatible(
         mocker: MockerFixture) -> None:
     msg = make_message(parameter=b"paramster")
-    track_info = make_track_info(id=42)
     unpack_mock = mocker.patch(
         'sq100.arival_sq100.unpack_track_point_parameter')
-    returned_track = make_track_info(id=44)
-    unpack_mock.return_value = returned_track, (0, 2), make_track_points([
-        {}, {}, {}])
+    unpack_mock.return_value = (
+        make_track_head(no_laps=2),
+        (0, 2),
+        make_track_points([{}, {}, {}]))
 
     with pytest.raises(SQ100MessageException):
         arival_sq100.process_get_tracks_track_points_msg(
-            expected_track_info=track_info, expected_session_start=0, msg=msg)
+            expected_track_info=make_track_info(no_laps=3),
+            expected_session_start=0, msg=msg)
 
 
 def test_process_get_tracks_track_points_msg__raises_if_session_start_is_wrong(
@@ -208,6 +228,8 @@ def make_lap_info_trackhead_pack(
         no_laps: int,
         distance: float,
         msg_type: int
+
+
 ) -> bytes:
     return struct.pack(
         ">6B3IH8sB",

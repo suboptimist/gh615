@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-from typing import List, TypedDict
+from typing import List, Optional, TypedDict
 
 from sq100.data_types import Track, TrackInfo, TrackPoint
 
@@ -89,11 +89,13 @@ def make_track_info(
     )
 
 
-def make_track() -> Track:
+def make_track(track_points: Optional[List[TrackPoint]] = None) -> Track:
+    if track_points is None:
+        track_points = []
     return Track(
         info=make_track_info(),
         laps=[],
-        track_points=[]
+        track_points=track_points
     )
 
 
