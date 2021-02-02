@@ -353,7 +353,7 @@ def query(
         command: int,
         parameter: bytes = b'') -> Message:
     connection.write(create_message(command, parameter))
-    "first, read three bytes to determine payload"
+    # first, read three bytes to determine payload
     begin = connection.read(3)
     _, payload = struct.unpack(">BH", begin)
     rest = connection.read(payload + 1)  # +1 for checksum

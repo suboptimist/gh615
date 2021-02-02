@@ -22,7 +22,7 @@ import logging
 import serial
 from dataclasses import dataclass
 
-from typing import Any, cast, Optional
+from typing import Any, cast
 
 from sq100.exceptions import SQ100SerialException
 
@@ -66,16 +66,7 @@ class SerialConnection:
             logger.critical("write timeout occured")
             raise SQ100SerialException
 
-    def read(self, size: int = 3000) -> bytes:
+    def read(self, size: int) -> bytes:
         data = self.serial.read(size)
         logger.debug("reading data:: %s", data)
         return cast(bytes, data)
-
-    def query(self, command: bytes) -> Optional[bytes]:
-        for attempt in range(3):
-            self.write(command)
-            data = self.read()
-            if data:
-                return data
-            logger.debug("no data at serial port at attempt %d", attempt)
-        raise SQ100SerialException("query failed")

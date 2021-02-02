@@ -26,7 +26,7 @@ class TrackPointOptins(TypedDict, total=False):
     latitude: float
     longitude: float
     altitude: float
-    interval: float
+    interval: datetime.timedelta
     speed: float
     heart_rate: float
 
@@ -39,7 +39,7 @@ def make_track_point(
     latitude: float = 0,
     longitude: float = 0,
     altitude: float = 0,
-    interval: float = 0,
+    interval: datetime.timedelta = datetime.timedelta(0),
     speed: float = 0,
     heart_rate: float = 0,
 ) -> TrackPoint:
@@ -47,7 +47,7 @@ def make_track_point(
         latitude=latitude,
         longitude=longitude,
         altitude=altitude,
-        interval=datetime.timedelta(seconds=interval),
+        interval=interval,
         speed=speed,
         heart_rate=heart_rate,
     )

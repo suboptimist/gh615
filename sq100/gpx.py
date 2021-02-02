@@ -116,21 +116,22 @@ def _create_track_element(
         ns=gpx_ns, tag="cmt", value="id=%s" % track.info.id))
     elem.append(_create_string_element(ns=gpx_ns, tag="src", value=src))
     elem.append(_create_decimal_element(ns=gpx_ns, tag="number", value=number))
-    elem.append(_create_track_segment_element(track.track_points))
+    elem.append(_create_track_segment_element(
+        track_points=track.track_points, start_date=track.info.date))
     return elem
 
 
 def _create_track_point_element(
-        track_point: TrackPoint, ns: str = gpx_ns, tag: str = 'trkpt'
+        track_point: TrackPoint,
+        date: datetime.datetime,
+        ns: str = gpx_ns,
+        tag: str = 'trkpt'
 ) -> etree.Element:
     trkpt = etree.Element(str(etree.QName(ns, tag)))
     trkpt.set("lat", str(track_point.latitude))
     trkpt.set("lon", str(track_point.longitude))
     trkpt.append(_create_decimal_element(gpx_ns, "ele", track_point.altitude))
-    # FIXME: obtain date from somewhere
-    # if track_point.date is not None:
-    #     trkpt.append(_create_datetime_element(
-    #         gpx_ns, "time", track_point.date))
+    trkpt.append(_create_datetime_element(gpx_ns, "time", date))
     trkpt.append(_create_track_point_extensions_element(track_point))
     return trkpt
 
@@ -148,12 +149,15 @@ def _create_track_point_extensions_element(
 
 def _create_track_segment_element(
         track_points: List[TrackPoint],
+        start_date: datetime.datetime,
         ns: str = gpx_ns,
         tag: str = "trkseg"
 ) -> etree.Element:
     segment = etree.Element(str(etree.QName(ns, tag)))
+    date = start_date
     for track_point in track_points:
-        segment.append(_create_track_point_element(track_point))
+        segment.append(_create_track_point_element(track_point, date=date))
+        date += track_point.interval
     return segment
 
 

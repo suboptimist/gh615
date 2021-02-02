@@ -16,16 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# import datetime
+import datetime
 import pytest
 import struct
-# from mock import create_autospec, patch
-
-import datetime
 from pytest_mock import MockerFixture
 
 from sq100.test.dummies import make_track_info, make_track_points
 from sq100 import arival_sq100
+from sq100 import serial_connection
 from sq100.exceptions import SQ100MessageException
 from sq100.data_types import Lap, TrackInfo, TrackPoint
 
@@ -228,8 +226,6 @@ def make_lap_info_trackhead_pack(
         no_laps: int,
         distance: float,
         msg_type: int
-
-
 ) -> bytes:
     return struct.pack(
         ">6B3IH8sB",
@@ -545,88 +541,59 @@ def test_unpack_message__raises_if_payload_leng_is_wrong() -> None:
         arival_sq100.unpack_message(message_pack)
 
 
-# def test_query() -> None:
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-#     assert sq100._query("the command", "the parameter") == "unpacked data"
+def make_track_list_entry(
+    date: datetime.datetime = datetime.datetime(1987, 12, 19),
+    no_laps: int = 0,
+    duration: datetime.timedelta = datetime.timedelta(seconds=0),
+    distance: int = 0,
+    no_track_points: int = 0,
+    memory_block_index: int = 0,
+    id: int = 0,
+) -> arival_sq100.TrackListEntry:
+    return arival_sq100.TrackListEntry(
+        date=date, no_laps=no_laps, duration=duration, distance=distance,
+        no_track_points=no_track_points, memory_block_index=memory_block_index,
+        id=id)
 
 
-# def test_track_ids_to_memory_indices() -> None:
-#     # mock_get_track_list.return_value = [
-#     #     Track(id=1, memory_block_index=10),
-#     #     Track(id=3, memory_block_index=200),
-#     #     Track(id=10, memory_block_index=35),
-#     #     Track(id=8, memory_block_index=111)]
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-#     memory_indices = sq100._track_ids_to_memory_indices([3, 1, 10])
-#     assert memory_indices == [200, 10, 35]
+def test_track_ids_to_memory_indices__returns_correct_indices() -> None:
+    memory_indices = arival_sq100.track_ids_to_memory_indices(
+        tracks=[
+            make_track_list_entry(id=1, memory_block_index=10),
+            make_track_list_entry(id=2, memory_block_index=20),
+            make_track_list_entry(id=3, memory_block_index=30),
+            make_track_list_entry(id=4, memory_block_index=40)],
+        track_ids=[3, 1, 2])
+    assert memory_indices == [30, 10, 20]
 
 
-# @patch('sq100.arival_sq100.SerialConnection')
-# def test_connect(mock_serial_connection) -> None:
-#     mock_serial = mock_serial_connection.return_value
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-#     sq100.connect()
-#     mock_serial.connect.assert_called_once()
+def test_query__calls_correct_write(mocker: MockerFixture) -> None:
+    mock_connection = mocker.create_autospec(
+        serial_connection.SerialConnection)
+    mock_connection.read.side_effect = [
+        bytes([0, 0, 2]),
+        b'hi' + bytes([2 ^ ord('h') ^ ord('i')])]
+
+    arival_sq100.query(
+        connection=mock_connection,
+        command=42,
+        parameter=b"ab")
+
+    mock_connection.write.assert_called_once_with(
+        bytes([2, 0, 3, 42]) + b'ab' + bytes([3 ^ 42 ^ ord('a') ^ ord('b')]))
 
 
-# @patch('sq100.arival_sq100.SerialConnection')
-# def test_disconnect(mock_serial_connection) -> None:
-#     mock_serial = mock_serial_connection.return_value
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-#     sq100.disconnect()
-#     mock_serial.disconnect.assert_called_once()
+def test_query__returns_correct_message(mocker: MockerFixture) -> None:
+    mock_connection = mocker.create_autospec(
+        serial_connection.SerialConnection)
+    mock_connection.read.side_effect = [
+        bytes([0, 0, 2]),
+        b'hi' + bytes([2 ^ ord('h') ^ ord('i')])]
 
+    message = arival_sq100.query(
+        connection=mock_connection,
+        command=42,
+        parameter=b"ab")
 
-# def test_get_track_list() -> None:
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-#     mock_message = create_autospec(Message)
-#     mock_message.parameter = "the parameter"
-#     mock_query.return_value = mock_message
-#     mock_unpack.return_value = "the tracks"
-#     assert sq100.get_track_list() == "the tracks"
-#     mock_query.assert_called_once_with(0x78)
-#     mock_unpack.assert_called_once_with("the parameter")
-
-
-# def test_get_tracks() -> None:
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-
-#     tracks = sq100.get_tracks([1, 5])
-#     assert tracks[0].name == "track info 1"
-#     assert tracks[0].laps == "lap info 1"
-#     assert tracks[0].track_points == ["track points 1.1", "track points 1.2"]
-#     assert tracks[1].name == "track info 2"
-#     assert tracks[1].laps == "lap info 2"
-#     assert tracks[1].track_points == ["track points 2.1", "track points 2.2"]
-
-
-# def test_get_tracks_no_finish(mock_id2index, mock_pack, mock_query,
-#                               mock_process_track_info, mock_process_lap_info,
-#                               mock_process_track_points, mock_is_finish):
-#     sq100 = ArivalSQ100(port=None, baudrate=None, timeout=None)
-#     mock_id2index.return_value = "the indices"
-#     mock_pack.return_value = "the request parameter"
-#     mock_query.side_effect = [
-#         "track info 1", "lap info 1", "track points 1", "not the end"]
-
-#     def track_info_side_effect(msg):
-#         track = create_autospec(Track)
-#         track.track_info = msg
-#         track.laps = None
-#         track.track_points = []
-#         track.complete = lambda: len(track.track_points) == 1
-#         return track
-
-#     def lap_info_side_effect(track, msg):
-#         track.laps = msg
-
-#     def track_points_side_effect(track, msg):
-#         track.track_points.append(msg)
-
-#     mock_process_track_info.side_effect = track_info_side_effect
-#     mock_process_lap_info.side_effect = lap_info_side_effect
-#     mock_process_track_points.side_effect = track_points_side_effect
-#     mock_is_finish.side_effect = lambda msg: msg == "the end"
-
-#     with pytest.raises(SQ100MessageException):
-#         sq100.get_tracks([5])
+    assert message.parameter == b'hi'
+    assert message.payload_length == 2

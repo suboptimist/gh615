@@ -23,7 +23,11 @@ import xml.etree.ElementTree as etree
 
 import sq100.gpx as gpx
 from sq100.data_types import CoordinateBounds, Point, Track, TrackPoint
-from sq100.test.dummies import make_track_info, make_tracks, make_track_point
+from sq100.test.dummies import (
+    make_track,
+    make_track_info,
+    make_tracks,
+    make_track_point)
 
 
 def test_create_bounds_element() -> None:
@@ -74,8 +78,10 @@ def test_create_garmin_track_point_extension_element() -> None:
 
 
 def test_create_gpx_element() -> None:
-    tracks = make_tracks(num=2)
-    elem = gpx._create_gpx_element(tracks)
+    elem = gpx._create_gpx_element(tracks=[
+        make_track(track_points=[make_track_point(latitude=-1, longitude=2)]),
+        make_track(track_points=[make_track_point(latitude=3, longitude=-4)])])
+
     ns = '{%s}' % gpx.gpx_ns
     assert elem.tag == 'gpx'
     gpx_tracks = elem.findall(ns + 'trk')
@@ -86,7 +92,7 @@ def test_create_gpx_element() -> None:
     assert gpx_number_1 is not None
     assert gpx_number_0.text == '0'
     assert gpx_number_1.text == '1'
-    # assert len(elem.findall(ns + 'metadata')) == 1
+    assert len(elem.findall(ns + 'metadata')) == 1
 
 
 def test_create_metadata_element() -> None:
@@ -129,8 +135,12 @@ def test_create_track_element() -> None:
     src = "My heart rate computer"
     number = 10
     elem = gpx._create_track_element(track=track, number=number, src=src)
-    # assert elem.find(ns + 'cmt').text == "id=5"
-    # assert elem.find(ns + 'src').text == "My heart rate computer"
+    cmt_element = elem.find(ns + 'cmt')
+    src_element = elem.find(ns + 'src')
+    assert cmt_element is not None
+    assert src_element is not None
+    assert cmt_element.text == "id=5"
+    assert src_element.text == "My heart rate computer"
     assert elem.find(ns + 'trkseg') is not None
 
 
@@ -140,13 +150,17 @@ def test_create_track_point_element(mock_create_extensions_elem: Any) -> None:
     mock_create_extensions_elem.return_value = etree.Element(ns + 'extensions')
     tp = make_track_point(
         latitude=23.4, longitude=-32.1, altitude=678.51,
-        # date=datetime.datetime(1987, 12, 19, 15, 30, 20),
     )
-    elem = gpx._create_track_point_element(tp)
-    # assert float(elem.get('lat')) == tp.latitude
-    # assert float(elem.get('lon')) == tp.longitude
-    # assert float(elem.find(ns + 'ele').text) == tp.altitude
-    # assert elem.find(ns + 'time').text == '1987-12-19T15:30:20Z'
+    elem = gpx._create_track_point_element(
+        tp, date=datetime.datetime(1987, 12, 19, 15, 30, 20))
+    assert float(elem.get('lat', -1)) == 23.4
+    assert float(elem.get('lon', -1)) == -32.1
+    elevation_element = elem.find(ns + 'ele')
+    assert elevation_element is not None
+    assert elevation_element.text == "678.51"
+    time_element = elem.find(ns + 'time')
+    assert time_element is not None
+    assert time_element.text == '1987-12-19T15:30:20Z'
     assert elem.find(ns + 'extensions') is not None
 
 
@@ -160,15 +174,27 @@ def test_create_track_point_extensions_element() -> None:
 
 def test_create_track_segment_element() -> None:
     track_points = [
-        make_track_point(latitude=1),
-        make_track_point(latitude=2),
+        make_track_point(latitude=1, interval=datetime.timedelta(seconds=10)),
+        make_track_point(latitude=2, interval=datetime.timedelta(minutes=10)),
         make_track_point(latitude=3)]
-    elem = gpx._create_track_segment_element(track_points)
+    elem = gpx._create_track_segment_element(
+        track_points=track_points,
+        start_date=datetime.datetime(2000, 1, 1, 12, 0, 0))
     assert elem.tag == "{%s}%s" % (gpx.gpx_ns, 'trkseg')
     trkpt = '{' + gpx.gpx_ns + '}trkpt'
+    time = '{' + gpx.gpx_ns + '}time'
     assert elem.findall(trkpt)[0].get('lat') == "1"
+    time_0 = elem.findall(trkpt)[0].find(time)
+    assert time_0 is not None
+    assert time_0.text == "2000-01-01T12:00:00Z"
     assert elem.findall(trkpt)[1].get('lat') == "2"
+    time_1 = elem.findall(trkpt)[1].find(time)
+    assert time_1 is not None
+    assert time_1.text == "2000-01-01T12:00:10Z"
     assert elem.findall(trkpt)[2].get('lat') == "3"
+    time_2 = elem.findall(trkpt)[2].find(time)
+    assert time_2 is not None
+    assert time_2.text == "2000-01-01T12:10:10Z"
 
 
 def test_indent() -> None:
