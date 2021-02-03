@@ -16,22 +16,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import create_autospec
 
-from sq100.data_types import CoordinateBounds, Point, Track
+from sq100.data_types import CoordinateBounds, Point
+from sq100.test.dummies import make_track, make_track_point
 import sq100.utilities as utils
 
 
-def test_calc_tracks_bounds():
-    tracks = [create_autospec(Track) for _ in range(3)]
-    track_bounds = [
-        CoordinateBounds(minimum=Point(-20, 5), maximum=Point(0, 11)),
-        CoordinateBounds(minimum=Point(8, -3), maximum=Point(10, 2)),
-        CoordinateBounds(minimum=Point(5, 7), maximum=Point(12, 9))]
-    for i in range(3):
-        tracks[i].bounds.return_value = track_bounds[i]
+def test_calc_tracks_bounds() -> None:
+    tracks = [
+        make_track(track_points=[
+            make_track_point(latitude=-20., longitude=2.),
+            make_track_point(latitude=-5., longitude=11.),
+        ]),
+        make_track(track_points=[
+            make_track_point(latitude=5., longitude=-3.),
+            make_track_point(latitude=12., longitude=10.),
+        ]),
+    ]
     bounds = utils.calc_tracks_bounds(tracks)
-    expected = CoordinateBounds(minimum=Point(-20, -3), maximum=Point(12, 11))
-    print(bounds)
-    print(expected)
+    expected = CoordinateBounds(min=Point(-20, -3), max=Point(12, 11))
     assert bounds == expected

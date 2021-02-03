@@ -18,24 +18,30 @@
 
 import datetime
 from mock import create_autospec, patch
+from typing import Any
 import xml.etree.ElementTree as etree
 
 import sq100.gpx as gpx
 from sq100.data_types import CoordinateBounds, Point, Track, TrackPoint
+from sq100.test.dummies import (
+    make_track,
+    make_track_info,
+    make_tracks,
+    make_track_point)
 
 
-def test_create_bounds_element():
+def test_create_bounds_element() -> None:
     bounds = CoordinateBounds(
-        minimum=Point(latitude=10.8, longitude=-8.1),
-        maximum=Point(latitude=25.0, longitude=-2.9))
+        min=Point(latitude=10.8, longitude=-8.1),
+        max=Point(latitude=25.0, longitude=-2.9))
     elem = gpx._create_bounds_element(value=bounds)
-    assert float(elem.get("minlat")) == bounds.min.latitude
-    assert float(elem.get("minlon")) == bounds.min.longitude
-    assert float(elem.get("maxlat")) == bounds.max.latitude
-    assert float(elem.get("maxlon")) == bounds.max.longitude
+    assert float(elem.get("minlat", "0")) == bounds.min.latitude
+    assert float(elem.get("minlon", "0")) == bounds.min.longitude
+    assert float(elem.get("maxlat", "0")) == bounds.max.latitude
+    assert float(elem.get("maxlon", "0")) == bounds.max.longitude
 
 
-def test_create_datetime_element_with_tzinfo():
+def test_create_datetime_element_with_tzinfo() -> None:
     dt = datetime.datetime(
         year=1987, month=12, day=19, hour=15, minute=30, second=20,
         tzinfo=datetime.timezone(datetime.timedelta(hours=1)))
@@ -44,7 +50,7 @@ def test_create_datetime_element_with_tzinfo():
     assert elem.text == "1987-12-19T14:30:20Z"
 
 
-def test_create_datetime_element_without_tzinfo():
+def test_create_datetime_element_without_tzinfo() -> None:
     dt = datetime.datetime(
         year=1987, month=12, day=19, hour=15, minute=30, second=20)
     elem = gpx._create_datetime_element(ns="timo", tag="birth", value=dt)
@@ -52,121 +58,146 @@ def test_create_datetime_element_without_tzinfo():
     assert elem.text == "1987-12-19T15:30:20Z"
 
 
-def test_create_decimal_element():
+def test_create_decimal_element() -> None:
     elem = gpx._create_decimal_element(ns="timo", tag="number", value=-42.5)
     assert elem.tag == '{timo}number'
+    assert elem.text is not None
     assert float(elem.text) == -42.5
 
 
-def test_create_garmin_track_point_extension_element():
+def test_create_garmin_track_point_extension_element() -> None:
     track_point = create_autospec(TrackPoint)
     track_point.heart_rate = 150
     ns = 'http://www.garmin.com/xmlschemas/TrackPointExtension/v2'
     elem = gpx._create_garmin_track_point_extension_element(track_point)
+    heart_rate_element = elem.find('{%s}hr' % ns)
     assert elem.tag == ("{%s}TrackPointExtension" % ns)
-    print(etree.tostring(elem))
-    assert int(elem.find('{%s}hr' % ns).text) == 150
+    assert heart_rate_element is not None
+    assert heart_rate_element.text is not None
+    assert int(heart_rate_element.text) == 150
 
 
-@patch("sq100.gpx._create_metadata_element", autospec=True)
-@patch("sq100.gpx._create_track_element", autospec=True)
-@patch('sq100.gpx.calc_tracks_bounds', autospec=True)
-def test_create_gpx_element(mock_calc_tracks_bounds,
-                            mock_create_track_element,
-                            mock_create_metadata_element):
-    tracks = ["track 1", "track 2"]
-    mock_calc_tracks_bounds.return_value = "the bounds"
-    mock_create_metadata_element.return_value = etree.Element("metadata")
-    mock_create_track_element.side_effect = (
-        lambda track, number: etree.Element(
-            'trk', attrib={'number': str(number), 'data': track}))
-    elem = gpx._create_gpx_element(tracks)
+def test_create_gpx_element() -> None:
+    elem = gpx._create_gpx_element(tracks=[
+        make_track(track_points=[make_track_point(latitude=-1, longitude=2)]),
+        make_track(track_points=[make_track_point(latitude=3, longitude=-4)])])
+
+    ns = '{%s}' % gpx.gpx_ns
     assert elem.tag == 'gpx'
-    assert len(elem.findall('trk')) == 2
-    assert elem.findall('trk')[0].get('data') == 'track 1'
-    assert elem.findall('trk')[0].get('number') == '0'
-    assert elem.findall('trk')[1].get('data') == 'track 2'
-    assert elem.findall('trk')[1].get('number') == '1'
-    assert len(elem.findall('metadata')) == 1
+    gpx_tracks = elem.findall(ns + 'trk')
+    assert len(gpx_tracks) == 2
+    gpx_number_0 = gpx_tracks[0].find(ns + 'number')
+    gpx_number_1 = gpx_tracks[1].find(ns + 'number')
+    assert gpx_number_0 is not None
+    assert gpx_number_1 is not None
+    assert gpx_number_0.text == '0'
+    assert gpx_number_1.text == '1'
+    assert len(elem.findall(ns + 'metadata')) == 1
 
 
-@patch('sq100.gpx._create_bounds_element', autospec=True)
-def test_create_metadata_element(mock_create_bounds_element):
-    bounds = "the bounds"
-    date = datetime.datetime(1987, 12, 19, 15, 30, 12)
-    name = "my name"
-    description = "my metadata description"
-    ns = "timo"
-    mock_create_bounds_element.side_effect = (
-        lambda ns, tag, value: etree.Element("{%s}%s" % (ns, tag),
-                                             attrib={"bounds": value}))
-    elem = gpx._create_metadata_element(bounds=bounds, date=date, name=name,
-                                        description=description, ns=ns)
-    assert elem.find('{%s}name' % ns).text == name
-    assert elem.find('{%s}desc' % ns).text == description
-    assert elem.find('{%s}time' % ns).text == '1987-12-19T15:30:12Z'
-    assert elem.find('{%s}bounds' % ns).get('bounds') == bounds
+def test_create_metadata_element() -> None:
+    elem = gpx._create_metadata_element(
+        bounds=CoordinateBounds(min=Point(1., 2.), max=Point(3., 4.)),
+        date=datetime.datetime(1987, 12, 19, 15, 30, 12),
+        name="my name",
+        description="my metadata description",
+        ns="timo")
+    name_element = elem.find('{timo}name')
+    desc_element = elem.find('{timo}desc')
+    time_element = elem.find('{timo}time')
+    bounds_element = elem.find('{timo}bounds')
+    assert name_element is not None
+    assert desc_element is not None
+    assert time_element is not None
+    assert bounds_element is not None
+    assert name_element.text == "my name"
+    assert desc_element.text == "my metadata description"
+    assert time_element.text == '1987-12-19T15:30:12Z'
+    assert bounds_element.get("minlat") == "1.0"
+    assert bounds_element.get("minlon") == "2.0"
+    assert bounds_element.get("maxlat") == "3.0"
+    assert bounds_element.get("maxlon") == "4.0"
 
 
-def test_create_string_element():
+def test_create_string_element() -> None:
     elem = gpx._create_string_element(ns="timo", tag="name", value="nachstedt")
     assert elem.tag == "{timo}name"
     assert elem.text == "nachstedt"
 
 
-@patch('sq100.gpx._create_track_segment_element', autospec=True)
-def test_create_track_element(mock_create_segment_element):
+def test_create_track_element() -> None:
     ns = '{%s}' % gpx.gpx_ns
-    mock_create_segment_element.return_value = etree.Element(ns + "trkseg")
-    track = Track(name="timo", track_id="5", description="my track")
+    track = Track(
+        info=make_track_info(id=5),
+        laps=[],
+        track_points=[],
+    )
     src = "My heart rate computer"
     number = 10
     elem = gpx._create_track_element(track=track, number=number, src=src)
-    assert elem.find(ns + 'name').text == "timo"
-    assert elem.find(ns + 'cmt').text == "id=5"
-    assert elem.find(ns + "desc").text == "my track"
-    assert int(elem.find(ns + "number").text) == 10
-    assert elem.find(ns + 'src').text == "My heart rate computer"
+    cmt_element = elem.find(ns + 'cmt')
+    src_element = elem.find(ns + 'src')
+    assert cmt_element is not None
+    assert src_element is not None
+    assert cmt_element.text == "id=5"
+    assert src_element.text == "My heart rate computer"
     assert elem.find(ns + 'trkseg') is not None
 
 
 @patch('sq100.gpx._create_track_point_extensions_element', autospec=True)
-def test_create_track_point_element(mock_create_extensions_elem):
+def test_create_track_point_element(mock_create_extensions_elem: Any) -> None:
     ns = '{%s}' % gpx.gpx_ns
     mock_create_extensions_elem.return_value = etree.Element(ns + 'extensions')
-    tp = TrackPoint(latitude=23.4, longitude=-32.1, altitude=678.51,
-                    date=datetime.datetime(1987, 12, 19, 15, 30, 20))
-    elem = gpx._create_track_point_element(tp)
-    assert float(elem.get('lat')) == tp.latitude
-    assert float(elem.get('lon')) == tp.longitude
-    assert float(elem.find(ns + 'ele').text) == tp.altitude
-    assert elem.find(ns + 'time').text == '1987-12-19T15:30:20Z'
+    tp = make_track_point(
+        latitude=23.4, longitude=-32.1, altitude=678.51,
+    )
+    elem = gpx._create_track_point_element(
+        tp, date=datetime.datetime(1987, 12, 19, 15, 30, 20))
+    assert float(elem.get('lat', -1)) == 23.4
+    assert float(elem.get('lon', -1)) == -32.1
+    elevation_element = elem.find(ns + 'ele')
+    assert elevation_element is not None
+    assert elevation_element.text == "678.51"
+    time_element = elem.find(ns + 'time')
+    assert time_element is not None
+    assert time_element.text == '1987-12-19T15:30:20Z'
     assert elem.find(ns + 'extensions') is not None
 
 
-@patch('sq100.gpx._create_garmin_track_point_extension_element', autospec=True)
-def test_create_track_point_extensions_element(mock_create_garmin_element):
-    mock_create_garmin_element.return_value = etree.Element("garmin")
-    track_point = TrackPoint()
+def test_create_track_point_extensions_element() -> None:
+    track_point = make_track_point()
     elem = gpx._create_track_point_extensions_element(track_point)
     assert elem.tag == "{%s}%s" % (gpx.gpx_ns, 'extensions')
-    assert elem.find('garmin') is not None
-    mock_create_garmin_element.assert_called_once_with(track_point)
+    garmin = '{%s}%s' % (gpx.tpex_ns, 'TrackPointExtension')
+    assert elem.find(garmin) is not None
 
 
-@patch('sq100.gpx._create_track_point_element', autospec=True)
-def test_create_track_segment_element(mock_create_track_point_element):
-    track = Track(track_points=["tp1", "tp2", "tp3"])
-    mock_create_track_point_element.side_effect = (
-        lambda tp: etree.Element('trkpt', attrib={"foo": tp}))
-    elem = gpx._create_track_segment_element(track)
+def test_create_track_segment_element() -> None:
+    track_points = [
+        make_track_point(latitude=1, interval=datetime.timedelta(seconds=10)),
+        make_track_point(latitude=2, interval=datetime.timedelta(minutes=10)),
+        make_track_point(latitude=3)]
+    elem = gpx._create_track_segment_element(
+        track_points=track_points,
+        start_date=datetime.datetime(2000, 1, 1, 12, 0, 0))
     assert elem.tag == "{%s}%s" % (gpx.gpx_ns, 'trkseg')
-    assert elem.findall('trkpt')[0].get('foo') == "tp1"
-    assert elem.findall('trkpt')[1].get('foo') == "tp2"
-    assert elem.findall('trkpt')[2].get('foo') == "tp3"
+    trkpt = '{' + gpx.gpx_ns + '}trkpt'
+    time = '{' + gpx.gpx_ns + '}time'
+    assert elem.findall(trkpt)[0].get('lat') == "1"
+    time_0 = elem.findall(trkpt)[0].find(time)
+    assert time_0 is not None
+    assert time_0.text == "2000-01-01T12:00:00Z"
+    assert elem.findall(trkpt)[1].get('lat') == "2"
+    time_1 = elem.findall(trkpt)[1].find(time)
+    assert time_1 is not None
+    assert time_1.text == "2000-01-01T12:00:10Z"
+    assert elem.findall(trkpt)[2].get('lat') == "3"
+    time_2 = elem.findall(trkpt)[2].find(time)
+    assert time_2 is not None
+    assert time_2.text == "2000-01-01T12:10:10Z"
 
 
-def test_indent():
+def test_indent() -> None:
     elem = etree.Element('main')
     etree.SubElement(elem, "suba")
     gpx._indent(elem)
@@ -175,10 +206,12 @@ def test_indent():
     assert actual == expected
 
 
-@patch('sq100.gpx.etree.ElementTree', autospec=True)
-@patch('sq100.gpx._create_gpx_element', autospec=True)
-def test_tracks_to_gpx(mock_create_gpx_element, mock_element_tree):
-    tracks = [Track(), Track()]
+@ patch('sq100.gpx.etree.ElementTree', autospec=True)
+@ patch('sq100.gpx._create_gpx_element', autospec=True)
+def test_tracks_to_gpx(
+        mock_create_gpx_element: Any,
+        mock_element_tree: Any) -> None:
+    tracks = make_tracks(num=2)
     filename = 'tmp.gpx'
     mock_create_gpx_element.return_value = etree.Element("gpx")
     mock_doc = mock_element_tree.return_value

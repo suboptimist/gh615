@@ -16,23 +16,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sq100.data_types import CoordinateBounds, Point
+from sq100.data_types import CoordinateBounds, Point, Track, TrackPoint
 
-from typing import Set
+from typing import List, Optional, Set
 
 
-def calc_tracks_bounds(tracks):
-    track_bounds = [t.bounds() for t in tracks]
-    min_latitude = min([b.min.latitude for b in track_bounds])
-    min_longitude = min([b.min.longitude for b in track_bounds])
-    max_latitude = max([b.max.latitude for b in track_bounds])
-    max_longitude = max([b.max.longitude for b in track_bounds])
+def calc_tracks_bounds(tracks: List[Track]) -> Optional[CoordinateBounds]:
+    track_points: List[TrackPoint] = sum(
+        (track.track_points for track in tracks), [])
+    if len(track_points) == 0:
+        return None
+    min_latitude = min([p.latitude for p in track_points])
+    max_latitude = max([p.latitude for p in track_points])
+    min_longitude = min([p.longitude for p in track_points])
+    max_longitude = max([p.longitude for p in track_points])
     return CoordinateBounds(
-        minimum=Point(latitude=min_latitude, longitude=min_longitude),
-        maximum=Point(latitude=max_latitude, longitude=max_longitude))
+        min=Point(latitude=min_latitude, longitude=min_longitude),
+        max=Point(latitude=max_latitude, longitude=max_longitude))
 
 
-def parse_range(astr):
+def parse_range(astr: str) -> List[int]:
     result: Set[int] = set()
     for part in astr.split(','):
         x = part.split('-')
