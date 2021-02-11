@@ -26,17 +26,16 @@ from sq100.exceptions import SQ100SerialException
 
 def test_enter__everything_fine_if_successful(mocker: MockerFixture) -> None:
     mock_serial = mocker.patch("serial.Serial")
-    serial_instance = mock_serial.return_value
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
     with SerialConnection(config) as connection:
-        assert connection.serial == serial_instance
-    serial_instance.open.assert_called_once_with()
+        assert connection.connection == mock_serial.return_value
+    mock_serial.assert_called_once_with(
+        port="port", baudrate=10, timeout=11.11)
 
 
 def test_enter__raises_for_serial_exception(mocker: MockerFixture) -> None:
     mock_serial = mocker.patch("serial.Serial")
-    serial_instance = mock_serial.return_value
-    serial_instance.open.side_effect = serial.SerialException
+    mock_serial.side_effect = serial.SerialException
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
     with pytest.raises(SQ100SerialException):
         with SerialConnection(config):
@@ -56,8 +55,8 @@ def test_write__forwards_call_to_serial(mocker: MockerFixture) -> None:
     mock_serial = mocker.patch("serial.Serial")
     serial_instance = mock_serial.return_value
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
-    connection = SerialConnection(config)
-    connection.write(b'\x00\x80')
+    with SerialConnection(config) as connection:
+        connection.write(b'\x00\x80')
     serial_instance.write.assert_called_once_with(b'\x00\x80')
 
 
@@ -66,9 +65,9 @@ def test_write__raises_if_forwarding_failes(mocker: MockerFixture) -> None:
     serial_instance = mock_serial.return_value
     serial_instance.write.side_effect = serial.SerialTimeoutException
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
-    connection = SerialConnection(config)
-    with pytest.raises(SQ100SerialException):
-        connection.write(b'\x00\x80')
+    with SerialConnection(config) as connection:
+        with pytest.raises(SQ100SerialException):
+            connection.write(b'\x00\x80')
     serial_instance.write.assert_called_once_with(b'\x00\x80')
 
 
@@ -77,5 +76,5 @@ def test_read__forwards_data_from_serial(mocker: MockerFixture) -> None:
     serial_instance = mock_serial.return_value
     serial_instance.read.return_value = b'\xaa\xbb\xcc'
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
-    connection = SerialConnection(config)
-    assert connection.read(1234) == b'\xaa\xbb\xcc'
+    with SerialConnection(config) as connection:
+        assert connection.read(1234) == b'\xaa\xbb\xcc'
