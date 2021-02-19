@@ -128,11 +128,14 @@ def download_tracks(
         return
     tracks = arival_sq100.get_tracks(config=serial_config, track_ids=track_ids)
     if merge:
-        gpx.tracks_to_gpx(tracks, "downloaded_tracks.gpx")
+        gpx.store_tracks_to_file(
+            tracks=arival_sq100.tracks_to_gpx(tracks),
+            filename="downloaded_tracks.gpx")
     else:
         for track in tracks:
-            gpx.tracks_to_gpx(
-                [track], "downloaded_tracks-%s.gpx" % track.info.id)
+            gpx.store_tracks_to_file(
+                tracks=[arival_sq100.track_to_gpx(track)],
+                filename="downloaded_tracks-%s.gpx" % track.info.id)
 
 
 def get_latest_track_id(serial_config: SerialConfig) -> Optional[int]:
