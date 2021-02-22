@@ -20,12 +20,11 @@
 import argparse
 import logging
 from sq100.serial_connection import SerialConfig
-from typing import List, Optional
+from typing import List, Optional, Set
 import tabulate
 
 from sq100 import arival_sq100
 from sq100 import gpx
-from sq100 import utilities
 
 logging.basicConfig(filename="sq100.log", level=logging.DEBUG)
 
@@ -68,7 +67,7 @@ def main() -> None:
     parser_download.add_argument(
         "track_ids",
         help="list of track ids to download",
-        type=utilities.parse_range,
+        type=parse_range,
         nargs='?', default=[],)
     parser_download.add_argument(
         "-f", "--format",
@@ -145,3 +144,11 @@ def get_latest_track_id(serial_config: SerialConfig) -> Optional[int]:
         return None
     latest = sorted(track_headers, key=lambda t: t.date)[-1]
     return latest.id
+
+
+def parse_range(astr: str) -> List[int]:
+    result: Set[int] = set()
+    for part in astr.split(','):
+        x = part.split('-')
+        result.update(range(int(x[0]), int(x[-1]) + 1))
+    return sorted(result)
