@@ -2,6 +2,7 @@ build
 dist
 venv
 .cache
+.coverage
 .project
 .pydevproject
 coverage.xml
