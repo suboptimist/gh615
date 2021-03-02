@@ -37,7 +37,7 @@ setup(
     include_package_data=True,
     platforms='any',
     entry_points={
-        "console_scripts": ["sq100 = sq100.sq100:main"]},
+        "console_scripts": ["sq100 = sq100.cli:main"]},
     classifiers=[
         'Programming Language :: Python',
         'Development Status :: 1 - Planning',
