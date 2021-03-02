@@ -16,23 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from sq100.data_types import CoordinateBounds, Point, Track, TrackPoint
 
-from typing import List, Optional, Set
-
-
-def calc_tracks_bounds(tracks: List[Track]) -> Optional[CoordinateBounds]:
-    track_points: List[TrackPoint] = sum(
-        (track.track_points for track in tracks), [])
-    if len(track_points) == 0:
-        return None
-    min_latitude = min([p.latitude for p in track_points])
-    max_latitude = max([p.latitude for p in track_points])
-    min_longitude = min([p.longitude for p in track_points])
-    max_longitude = max([p.longitude for p in track_points])
-    return CoordinateBounds(
-        min=Point(latitude=min_latitude, longitude=min_longitude),
-        max=Point(latitude=max_latitude, longitude=max_longitude))
+from typing import List, Set
 
 
 def parse_range(astr: str) -> List[int]:
