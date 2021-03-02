@@ -19,7 +19,7 @@
 import datetime
 from typing import List, Optional, TypedDict
 
-from sq100.data_types import Track, TrackInfo, TrackPoint
+from sq100 import arival_sq100
 
 
 class TrackPointOptins(TypedDict, total=False):
@@ -31,7 +31,9 @@ class TrackPointOptins(TypedDict, total=False):
     heart_rate: float
 
 
-def make_track_points(args: List[TrackPointOptins]) -> List[TrackPoint]:
+def make_track_points(
+    args: List[TrackPointOptins]
+) -> List[arival_sq100.TrackPoint]:
     return [make_track_point(**kwargs) for kwargs in args]
 
 
@@ -42,8 +44,8 @@ def make_track_point(
     interval: datetime.timedelta = datetime.timedelta(0),
     speed: float = 0,
     heart_rate: float = 0,
-) -> TrackPoint:
-    return TrackPoint(
+) -> arival_sq100.TrackPoint:
+    return arival_sq100.TrackPoint(
         latitude=latitude,
         longitude=longitude,
         altitude=altitude,
@@ -69,8 +71,8 @@ def make_track_info(
         max_speed: float = 0,
         memory_block_index: int = 0,
         min_height: float = 0
-) -> TrackInfo:
-    return TrackInfo(
+) -> arival_sq100.TrackInfo:
+    return arival_sq100.TrackInfo(
         date=date,
         distance=distance,
         duration=duration,
@@ -89,15 +91,17 @@ def make_track_info(
     )
 
 
-def make_track(track_points: Optional[List[TrackPoint]] = None) -> Track:
+def make_track(
+        track_points: Optional[List[arival_sq100.TrackPoint]] = None
+) -> arival_sq100.Track:
     if track_points is None:
         track_points = []
-    return Track(
+    return arival_sq100.Track(
         info=make_track_info(),
         laps=[],
         track_points=track_points
     )
 
 
-def make_tracks(num: int = 0) -> List[Track]:
+def make_tracks(num: int = 0) -> List[arival_sq100.Track]:
     return [make_track() for _ in range(num)]

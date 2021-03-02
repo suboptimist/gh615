@@ -25,7 +25,6 @@ from sq100.test.dummies import make_track_info, make_track_points
 from sq100 import arival_sq100
 from sq100 import serial_connection
 from sq100.exceptions import SQ100MessageException
-from sq100.data_types import Lap, TrackInfo, TrackPoint
 
 
 def make_track_head(
@@ -67,8 +66,8 @@ def make_message(
         checksum=0)
 
 
-def make_lap(first_index: int = 0) -> Lap:
-    return Lap(
+def make_lap(first_index: int = 0) -> arival_sq100.Lap:
+    return arival_sq100.Lap(
         duration=datetime.timedelta(seconds=0),
         total_time=datetime.timedelta(seconds=0),
         distance=0.,
@@ -288,12 +287,14 @@ def test_unpack_lap_info_parameter__unpacks_data_correctly() -> None:
         duration=datetime.timedelta(seconds=2345.6),
         no_track_points=10, distance=11, no_laps=2)
     assert laps == [
-        Lap(duration=datetime.timedelta(seconds=22.2),
+        arival_sq100.Lap(
+            duration=datetime.timedelta(seconds=22.2),
             total_time=datetime.timedelta(seconds=222.2),
             distance=20, calories=21, max_speed=22, max_heart_rate=23,
             avg_heart_rate=24, min_height=25, max_height=26,
             first_index=27, last_index=28),
-        Lap(duration=datetime.timedelta(seconds=33.3),
+        arival_sq100.Lap(
+            duration=datetime.timedelta(seconds=33.3),
             total_time=datetime.timedelta(seconds=333.3),
             distance=30, calories=31, max_speed=32, max_heart_rate=33,
             avg_heart_rate=34, min_height=35, max_height=36,
@@ -355,7 +356,7 @@ def test_unpack_track_info_parameter__unpacks_correct_data() -> None:
 
     track_info = arival_sq100.unpack_track_info_parameter(parameter)
 
-    assert track_info == TrackInfo(
+    assert track_info == arival_sq100.TrackInfo(
         date=date, no_track_points=1, duration=duration, distance=2, no_laps=3,
         memory_block_index=4, id=5, calories=6, max_speed=7, max_heart_rate=8,
         avg_heart_rate=9, ascending_height=10, descending_height=11,
@@ -425,10 +426,10 @@ def test_unpack_track_point_parameter__unpacks_correct_data() -> None:
         no_laps=3)
     assert session == (4, 5)
     assert track_points == [
-        TrackPoint(
+        arival_sq100.TrackPoint(
             latitude=51.123456, longitude=9.234567, altitude=101, speed=11.11,
             heart_rate=102, interval=datetime.timedelta(seconds=10.1)),
-        TrackPoint(
+        arival_sq100.TrackPoint(
             latitude=-12.345678, longitude=-87.654321, altitude=201,
             speed=22.22, heart_rate=202,
             interval=datetime.timedelta(seconds=20.2))]

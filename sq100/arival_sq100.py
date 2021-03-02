@@ -23,23 +23,75 @@ import datetime
 import logging
 import struct
 
-from typing import List, NamedTuple, Tuple
+from typing import List, Tuple
 
 from sq100.exceptions import SQ100MessageException
-from sq100.data_types import Lap, Track, TrackPoint, TrackInfo
 from sq100.serial_connection import SerialConnection, SerialConfig
+from sq100 import gpx
 
 logger = logging.getLogger(__name__)
 
 
-class Message(NamedTuple):
+@dataclass
+class TrackInfo:
+    date: datetime.datetime
+    distance: float
+    duration: datetime.timedelta
+    no_laps: int
+    no_track_points: int
+    ascending_height: float
+    avg_heart_rate: float
+    calories: float
+    descending_height: float
+    id: int
+    max_heart_rate: float
+    max_height: float
+    max_speed: float
+    memory_block_index: int
+    min_height: float
+
+
+@dataclass
+class Lap:
+    duration: datetime.timedelta
+    total_time: datetime.timedelta
+    distance: float
+    calories: float
+    max_speed: float
+    max_heart_rate: float
+    avg_heart_rate: float
+    min_height: float
+    max_height: float
+    first_index: int
+    last_index: int
+
+
+@dataclass
+class TrackPoint:
+    latitude: float
+    longitude: float
+    altitude: float
+    interval: datetime.timedelta
+    speed: float
+    heart_rate: float
+
+
+@dataclass
+class Track:
+    info: TrackInfo
+    laps: List[Lap]
+    track_points: List[TrackPoint]
+
+
+@ dataclass
+class Message:
     command: int
     payload_length: int
     parameter: bytes
     checksum: int
 
 
-@dataclass
+@ dataclass
 class TrackHead:
     date: datetime.datetime
     duration: datetime.timedelta
@@ -147,8 +199,7 @@ def unpack_lap_info_parameter(
         'year', 'month', 'day', 'hour', 'minute', 'second',
         'no_points', 'duration', 'distance',
         'no_laps', 'NA_1', 'msg_type'])
-    t = TrackHeader._make(
-        struct.unpack(">6B3IH8sB", parameter[:29]))
+    t = TrackHeader(*struct.unpack(">6B3IH8sB", parameter[:29]))
     if t.msg_type != 0xAA:
         raise SQ100MessageException("wrong get_tracks message type")
     track = TrackHead(
@@ -284,8 +335,7 @@ def unpack_track_list_parameter(parameter: bytes) -> List[TrackListEntry]:
 
 
 def unpack_message(message: bytes) -> Message:
-    msg = Message._make(
-        struct.unpack(">BH%dsB" % (len(message) - 4), message))
+    msg = Message(*struct.unpack(">BH%dsB" % (len(message) - 4), message))
     if msg.payload_length != len(msg.parameter):
         raise SQ100MessageException(
             "paylod has wrong length!\n"
@@ -358,3 +408,36 @@ def query(
     _, payload = struct.unpack(">BH", begin)
     rest = connection.read(payload + 1)  # +1 for checksum
     return unpack_message(begin + rest)
+
+
+def tracks_to_gpx(tracks: List[Track]) -> List[gpx.Track]:
+    return [track_to_gpx(track, number=i) for i, track in enumerate(tracks)]
+
+
+def track_to_gpx(track: Track, number: int = 0) -> gpx.Track:
+    return gpx.Track(
+        comment=f"id={track.info.id}",
+        src="Arival SQ100 computer",
+        number=number,
+        track_points=track_points_to_gpx(
+            track.track_points,
+            start_time=track.info.date),
+    )
+
+
+def track_points_to_gpx(
+        track_points: List[TrackPoint],
+        start_time: datetime.datetime
+) -> List[gpx.TrackPoint]:
+    gpx_points = List[gpx.TrackPoint]()
+    time = start_time
+    for point in track_points:
+        time += point.interval
+        gpx_points.append(gpx.TrackPoint(
+            latitude=point.latitude,
+            longitude=point.longitude,
+            elevation=point.altitude,
+            time=time,
+            heart_rate=point.heart_rate,
+        ))
+    return gpx_points
