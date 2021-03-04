@@ -47,9 +47,9 @@ class SerialConnection:
             self.connection = serial.Serial(
                 baudrate=self.config.baudrate,
                 port=self.config.port,
-                timeout=self.config.timeout)
-            logger.debug("serial connection established on %s",
-                         self.connection.portstr)
+                timeout=self.config.timeout,
+            )
+            logger.debug("serial connection established on %s", self.connection.portstr)
             return self
         except serial.SerialException:
             logger.critical("error establishing serial connection")

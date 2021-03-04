@@ -29,8 +29,7 @@ def test_enter__everything_fine_if_successful(mocker: MockerFixture) -> None:
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
     with SerialConnection(config) as connection:
         assert connection.connection == mock_serial.return_value
-    mock_serial.assert_called_once_with(
-        port="port", baudrate=10, timeout=11.11)
+    mock_serial.assert_called_once_with(port="port", baudrate=10, timeout=11.11)
 
 
 def test_enter__raises_for_serial_exception(mocker: MockerFixture) -> None:
@@ -56,8 +55,8 @@ def test_write__forwards_call_to_serial(mocker: MockerFixture) -> None:
     serial_instance = mock_serial.return_value
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
     with SerialConnection(config) as connection:
-        connection.write(b'\x00\x80')
-    serial_instance.write.assert_called_once_with(b'\x00\x80')
+        connection.write(b"\x00\x80")
+    serial_instance.write.assert_called_once_with(b"\x00\x80")
 
 
 def test_write__raises_if_forwarding_failes(mocker: MockerFixture) -> None:
@@ -67,14 +66,14 @@ def test_write__raises_if_forwarding_failes(mocker: MockerFixture) -> None:
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
     with SerialConnection(config) as connection:
         with pytest.raises(SQ100SerialException):
-            connection.write(b'\x00\x80')
-    serial_instance.write.assert_called_once_with(b'\x00\x80')
+            connection.write(b"\x00\x80")
+    serial_instance.write.assert_called_once_with(b"\x00\x80")
 
 
 def test_read__forwards_data_from_serial(mocker: MockerFixture) -> None:
     mock_serial = mocker.patch("serial.Serial")
     serial_instance = mock_serial.return_value
-    serial_instance.read.return_value = b'\xaa\xbb\xcc'
+    serial_instance.read.return_value = b"\xaa\xbb\xcc"
     config = SerialConfig(port="port", baudrate=10, timeout=11.11)
     with SerialConnection(config) as connection:
-        assert connection.read(1234) == b'\xaa\xbb\xcc'
+        assert connection.read(1234) == b"\xaa\xbb\xcc"
