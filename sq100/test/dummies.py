@@ -31,9 +31,7 @@ class TrackPointOptins(TypedDict, total=False):
     heart_rate: float
 
 
-def make_track_points(
-    args: List[TrackPointOptins]
-) -> List[arival_sq100.TrackPoint]:
+def make_track_points(args: List[TrackPointOptins]) -> List[arival_sq100.TrackPoint]:
     return [make_track_point(**kwargs) for kwargs in args]
 
 
@@ -56,21 +54,21 @@ def make_track_point(
 
 
 def make_track_info(
-        date: datetime.datetime = datetime.datetime.now(),
-        distance: float = 0,
-        duration: datetime.timedelta = datetime.timedelta(0),
-        id: int = 0,
-        no_laps: int = 0,
-        no_track_points: int = 0,
-        ascending_height: int = 0,
-        avg_heart_rate: float = 0,
-        calories: float = 0,
-        descending_height: float = 0,
-        max_heart_rate: float = 0,
-        max_height: float = 0,
-        max_speed: float = 0,
-        memory_block_index: int = 0,
-        min_height: float = 0
+    date: datetime.datetime = datetime.datetime.now(),
+    distance: float = 0,
+    duration: datetime.timedelta = datetime.timedelta(0),
+    id: int = 0,
+    no_laps: int = 0,
+    no_track_points: int = 0,
+    ascending_height: int = 0,
+    avg_heart_rate: float = 0,
+    calories: float = 0,
+    descending_height: float = 0,
+    max_heart_rate: float = 0,
+    max_height: float = 0,
+    max_speed: float = 0,
+    memory_block_index: int = 0,
+    min_height: float = 0,
 ) -> arival_sq100.TrackInfo:
     return arival_sq100.TrackInfo(
         date=date,
@@ -87,19 +85,17 @@ def make_track_info(
         max_height=max_height,
         max_speed=max_speed,
         memory_block_index=memory_block_index,
-        min_height=min_height
+        min_height=min_height,
     )
 
 
 def make_track(
-        track_points: Optional[List[arival_sq100.TrackPoint]] = None
+    track_points: Optional[List[arival_sq100.TrackPoint]] = None,
 ) -> arival_sq100.Track:
     if track_points is None:
         track_points = []
     return arival_sq100.Track(
-        info=make_track_info(),
-        laps=[],
-        track_points=track_points
+        info=make_track_info(), laps=[], track_points=track_points
     )
 
 
