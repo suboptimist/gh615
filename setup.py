@@ -21,42 +21,40 @@ from setuptools import setup
 
 
 setup(
-    name='sq100',
+    name="sq100",
     version="0.1.1",
-    url='http://github.com/tnachstedt/sq100/',
-    license='Apache Software License',
-    author='Timo Nachstedt',
-    install_requires=['pyserial>=3.0,<4.0',
-                      'tabulate>=0.7,<1.0'],
-    author_email='mail@nachstedt.com',
-    description='Alternative read out for the SQ 100 heart rate monitor',
+    url="http://github.com/tnachstedt/sq100/",
+    license="Apache Software License",
+    author="Timo Nachstedt",
+    install_requires=["pyserial>=3.0,<4.0", "tabulate>=0.7,<1.0"],
+    author_email="mail@nachstedt.com",
+    description="Alternative read out for the SQ 100 heart rate monitor",
     long_description="""
       Alternative read out for the SQ 100 heart rate monitor
     """,
-    packages=['sq100'],
+    packages=["sq100"],
     include_package_data=True,
-    platforms='any',
-    entry_points={
-        "console_scripts": ["sq100 = sq100.cli:main"]},
+    platforms="any",
+    entry_points={"console_scripts": ["sq100 = sq100.cli:main"]},
     classifiers=[
-        'Programming Language :: Python',
-        'Development Status :: 1 - Planning',
-        'Natural Language :: English',
-        'Environment :: Console',
-        'Intended Audience :: End Users/Desktop',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-        'Topic :: Utilities',
+        "Programming Language :: Python",
+        "Development Status :: 1 - Planning",
+        "Natural Language :: English",
+        "Environment :: Console",
+        "Intended Audience :: End Users/Desktop",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
+        "Topic :: Utilities",
     ],
     extras_require={
-        'dev': [
-            'black',
+        "dev": [
+            "black",
             "mock",
-            'mypy==0.782',  # to avoid python/mypy#9656
-            'pip-tools',
-            'pytest',
-            'pytest-cov',
-            'pytest-mock',
+            "mypy==0.782",  # to avoid python/mypy#9656
+            "pip-tools",
+            "pytest",
+            "pytest-cov",
+            "pytest-mock",
         ]
-    }
+    },
 )
