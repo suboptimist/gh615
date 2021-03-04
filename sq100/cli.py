@@ -73,7 +73,9 @@ def main() -> None:
         "track_ids",
         help="list of track ids to download",
         type=parse_range,
-        nargs='?', default=[],)
+        nargs="?",
+        default=[],
+    )
     parser_download.add_argument(
         "-f", "--format", help="the format to export to", choices=["gpx"]
     )
@@ -166,7 +168,7 @@ def get_latest_track_id(serial_config: SerialConfig) -> Optional[int]:
 
 def parse_range(astr: str) -> List[int]:
     result: Set[int] = set()
-    for part in astr.split(','):
-        x = part.split('-')
+    for part in astr.split(","):
+        x = part.split("-")
         result.update(range(int(x[0]), int(x[-1]) + 1))
     return sorted(result)
