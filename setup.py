@@ -51,6 +51,7 @@ setup(
     extras_require={
         'dev': [
             'autopep8',
+            'black',
             "mock",
             'mypy==0.782',  # to avoid python/mypy#9656
             'pip-tools',
