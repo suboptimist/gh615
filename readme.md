@@ -18,20 +18,11 @@ python3 sq100/setup.py install --user
 
 ## Usage
 
-There are two distinct usage modes. On the one hand, you can use command line
-arguments to control the application:
+The application is controlled via a command line interface:
 
 ```bash
 sq100 list
 sq100 download 1,4
-```
-
-On the other hand, you can enter the interactive shell:
-
-```bash
-sq100
-(sq100) list
-(sq100) download 1,4
 ```
 
 ### Available Commands:
