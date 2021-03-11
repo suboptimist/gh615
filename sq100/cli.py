@@ -18,56 +18,104 @@
 
 
 import argparse
+import configparser
 import logging
-from sq100.serial_connection import SerialConfig
-from typing import List, Optional, Set
+import os
+import sys
 import tabulate
 
+from dataclasses import dataclass
+from typing import Literal, List, Optional, Set, Union
+
+from sq100 import serial_connection
 from sq100 import arival_sq100
 from sq100 import gpx
 
 logging.basicConfig(filename="sq100.log", level=logging.DEBUG)
 
 
+@dataclass
+class ListOptions:
+    serial_config: serial_connection.SerialConfig
+
+
+@dataclass
+class DownloadOptions:
+    serial_config: serial_connection.SerialConfig
+    track_id: List[int]
+    merge: bool
+    latest: bool
+
+
+Options = Union[ListOptions, DownloadOptions]
+
+
 def main() -> None:
+    default_serial_config = load_default_serial_config()
+    options = parse_args(args=sys.argv, default_serial_config=default_serial_config)
+    if isinstance(options, ListOptions):
+        show_tracklist(serial_config=options.serial_config)
+    elif isinstance(options, DownloadOptions):
+        download_tracks(
+            serial_config=options.serial_config,
+            track_ids=options.track_id,
+            merge=options.merge,
+            latest=options.latest,
+        )
 
-    # config = configparser.ConfigParser()
-    # config.read('sq100.cfg')
-    # config['serial'].get("comport", fallback="/dev/ttyUSB0")
-    # config['serial'].getint('baudrate', fallback=115200)
-    # config['serial'].getfloat('timeout', fallback=2.0)
 
-    description = "Serial Communication with the Arival SQ100 heart rate computer"
+def load_default_serial_config() -> serial_connection.SerialConfig:
+    config = configparser.ConfigParser()
+    config.read(["sq100.cfg", os.path.expanduser("~/.sq100.cfg")])
+    return serial_connection.SerialConfig(
+        port=config["serial"].get("comport", fallback="/dev/ttyUSB0"),
+        baudrate=config["serial"].getint("baudrate", fallback=115200),
+        timeout=config["serial"].getfloat("timeout", fallback=5.0),
+    )
 
-    serial_config_parser = argparse.ArgumentParser(add_help=False)
+
+def parse_args(
+    args: List[str], default_serial_config: serial_connection.SerialConfig
+) -> Options:
+    serial_config_parser = argparse.ArgumentParser(
+        add_help=False, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     serial_config_parser.add_argument(
         "-c",
         "--comport",
         help="comport for serial communication",
-        default="/dev/ttyUSB0",
+        default=default_serial_config.port,
     )
     serial_config_parser.add_argument(
         "-b",
         "--baudrate",
         help="baudrate for serial communication",
         type=int,
-        default=115200,
+        default=default_serial_config.baudrate,
     )
     serial_config_parser.add_argument(
         "-t",
         "--timeout",
         help="timeout for serial communication",
-        type=int,
-        default=2.0,
+        type=float,
+        default=default_serial_config.timeout,
     )
 
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(
+        description="Serial Communication with the Arival SQ100 heart rate computer"
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("list", parents=[serial_config_parser])
+    subparsers.add_parser(
+        "list",
+        parents=[serial_config_parser],
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
     parser_download = subparsers.add_parser(
-        name="download", parents=[serial_config_parser]
+        name="download",
+        parents=[serial_config_parser],
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser_download.add_argument(
         "track_ids",
@@ -86,24 +134,35 @@ def main() -> None:
         "-l", "--latest", help="download latest track", action="store_true"
     )
 
-    args = parser.parse_args()
+    opts = parser.parse_args(args=args)
 
-    serial_config = SerialConfig(
-        port=args.comport, baudrate=args.baudrate, timeout=args.timeout
-    )
-
-    if args.command == "list":
-        show_tracklist(serial_config=serial_config)
-    elif args.command == "download":
-        download_tracks(
-            serial_config=serial_config,
-            track_ids=args.track_ids,
-            merge=args.merge,
-            latest=args.latest,
+    if opts.command == "list":
+        return ListOptions(
+            serial_config=serial_connection.SerialConfig(
+                port=opts.comport, baudrate=opts.baudrate, timeout=opts.timeout
+            ),
         )
+    if opts.command == "download":
+        return DownloadOptions(
+            serial_config=serial_connection.SerialConfig(
+                port=opts.comport, baudrate=opts.baudrate, timeout=opts.timeout
+            ),
+            track_id=opts.track_ids,
+            merge=opts.merge,
+            latest=opts.latest,
+        )
+    raise ValueError("Unknown command")
 
 
-def show_tracklist(serial_config: SerialConfig) -> None:
+def parse_range(astr: str) -> List[int]:
+    result: Set[int] = set()
+    for part in astr.split(","):
+        x = part.split("-")
+        result.update(range(int(x[0]), int(x[-1]) + 1))
+    return sorted(result)
+
+
+def show_tracklist(serial_config: serial_connection.SerialConfig) -> None:
     tracks = arival_sq100.get_track_list(serial_config)
     if tracks:
         table = [
@@ -133,7 +192,7 @@ def show_tracklist(serial_config: SerialConfig) -> None:
 
 
 def download_tracks(
-    serial_config: SerialConfig,
+    serial_config: serial_connection.SerialConfig,
     track_ids: List[int] = [],
     merge: bool = False,
     latest: bool = False,
@@ -157,18 +216,10 @@ def download_tracks(
             )
 
 
-def get_latest_track_id(serial_config: SerialConfig) -> Optional[int]:
+def get_latest_track_id(serial_config: serial_connection.SerialConfig) -> Optional[int]:
     track_headers = arival_sq100.get_track_list(serial_config)
     if len(track_headers) == 0:
         print("no tracks found")
         return None
     latest = sorted(track_headers, key=lambda t: t.date)[-1]
     return latest.id
-
-
-def parse_range(astr: str) -> List[int]:
-    result: Set[int] = set()
-    for part in astr.split(","):
-        x = part.split("-")
-        result.update(range(int(x[0]), int(x[-1]) + 1))
-    return sorted(result)
