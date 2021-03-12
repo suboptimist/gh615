@@ -525,7 +525,7 @@ def track_to_gpx(track: Track, number: int = 0) -> gpx.Track:
 def track_points_to_gpx(
     track_points: List[TrackPoint], start_time: datetime.datetime
 ) -> List[gpx.TrackPoint]:
-    gpx_points = List[gpx.TrackPoint]()
+    gpx_points: List[gpx.TrackPoint] = []
     time = start_time
     for point in track_points:
         time += point.interval
