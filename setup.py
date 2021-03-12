@@ -49,6 +49,7 @@ setup(
     extras_require={
         "dev": [
             "black",
+            "flake8",
             "isort",
             "mock",
             "mypy==0.782",  # to avoid python/mypy#9656

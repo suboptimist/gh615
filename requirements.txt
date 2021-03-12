@@ -4,13 +4,16 @@
 #
 #    pip-compile requirements.in
 #
+-e file:///Users/timo/workspace/sq100  # via -r requirements.in
 appdirs==1.4.4            # via black
 attrs==20.3.0             # via pytest
 black==20.8b1             # via sq100
 click==7.1.2              # via black, pip-tools
 coverage==5.3.1           # via pytest-cov
+flake8==3.8.4             # via sq100
 iniconfig==1.1.1          # via pytest
 isort==5.7.0              # via sq100
+mccabe==0.6.1             # via flake8
 mock==4.0.3               # via sq100
 mypy-extensions==0.4.3    # via black, mypy
 mypy==0.782               # via sq100
@@ -19,6 +22,8 @@ pathspec==0.8.1           # via black
 pip-tools==5.4.0          # via sq100
 pluggy==0.13.1            # via pytest
 py==1.10.0                # via pytest
+pycodestyle==2.6.0        # via flake8
+pyflakes==2.2.0           # via flake8
 pyparsing==2.4.7          # via packaging
 pyserial==3.5             # via sq100
 pytest-cov==2.10.1        # via sq100
