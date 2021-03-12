@@ -21,6 +21,7 @@ import argparse
 import configparser
 import logging
 import os
+from pathlib import Path
 import sys
 import tabulate
 
@@ -139,7 +140,8 @@ def parse_args(
                 port=opts.comport, baudrate=opts.baudrate, timeout=opts.timeout
             ),
         )
-    if opts.command == "download":
+    else:
+        assert opts.command == "download"
         return DownloadOptions(
             serial_config=serial_connection.SerialConfig(
                 port=opts.comport, baudrate=opts.baudrate, timeout=opts.timeout
@@ -148,7 +150,6 @@ def parse_args(
             merge=opts.merge,
             latest=opts.latest,
         )
-    raise ValueError("Unknown command")
 
 
 def parse_range(astr: str) -> List[int]:
@@ -193,6 +194,7 @@ def download_tracks(
     track_ids: List[int] = [],
     merge: bool = False,
     latest: bool = False,
+    output_dir: Path = Path.cwd(),
 ) -> None:
     if latest:
         latest_track_id = get_latest_track_id(serial_config=serial_config)
@@ -203,13 +205,14 @@ def download_tracks(
     tracks = arival_sq100.get_tracks(config=serial_config, track_ids=track_ids)
     if merge:
         gpx.store_tracks_to_file(
-            tracks=arival_sq100.tracks_to_gpx(tracks), filename="downloaded_tracks.gpx"
+            tracks=arival_sq100.tracks_to_gpx(tracks),
+            filename=str(output_dir / "downloaded_tracks.gpx"),
         )
     else:
         for track in tracks:
             gpx.store_tracks_to_file(
                 tracks=[arival_sq100.track_to_gpx(track)],
-                filename="downloaded_tracks-%s.gpx" % track.info.id,
+                filename=str(output_dir / f"downloaded_tracks-{track.info.id}.gpx"),
             )
 
 

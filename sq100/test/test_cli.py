@@ -17,8 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import datetime
+from pathlib import Path
 import pytest
+from pytest_mock import MockerFixture
 
+from sq100.test import dummies
+from sq100.test import test_arival_sq100
 from sq100 import cli
 from sq100 import serial_connection
 
@@ -136,3 +141,132 @@ def test_parse_args__download_sets_latest_to_true_if_flag_is_given() -> None:
     )
     assert isinstance(opts, cli.DownloadOptions)
     assert opts.latest is True
+
+
+def test_parse_args__exits_for_wrong_command() -> None:
+    with pytest.raises(SystemExit):
+        cli.parse_args(
+            args=["foo"],
+            default_serial_config=default_serial_config,
+        )
+
+
+def test_show_tracklist__shows_table_of_tracks(
+    capsys: pytest.CaptureFixture[str], mocker: MockerFixture
+) -> None:
+    mocked_get_track_list = mocker.patch("sq100.arival_sq100.get_track_list")
+    mocked_get_track_list.return_value = [
+        test_arival_sq100.make_track_list_entry(
+            date=datetime.datetime(2001, 2, 3, 4, 5, 6),
+            distance=42,
+            duration=datetime.timedelta(hours=1, minutes=2, seconds=3),
+            no_track_points=11,
+            no_laps=12,
+            memory_block_index=13,
+        )
+    ]
+    cli.show_tracklist(default_serial_config)
+    captured = capsys.readouterr()
+    expected = (
+        ""
+        + "  id  date                   distance  duration      trkpnts    laps    mem. index\n"
+        + "----  -------------------  ----------  ----------  ---------  ------  ------------\n"
+        + "   0  2001-02-03 04:05:06          42  1:02:03            11      12            13\n"
+    )
+    assert captured.out == expected
+
+
+def test_show_tracklist__shows_no_tracks_found_if_no_tracks_are_returned(
+    capsys: pytest.CaptureFixture[str], mocker: MockerFixture
+) -> None:
+    mocked_get_track_list = mocker.patch("sq100.arival_sq100.get_track_list")
+    mocked_get_track_list.return_value = []
+    cli.show_tracklist(default_serial_config)
+    captured = capsys.readouterr()
+    assert captured.out == "no tracks found\n"
+
+
+def test_download_tracks__creates_gpx_files(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    mocked_get_tracks = mocker.patch("sq100.arival_sq100.get_tracks")
+    mocked_get_tracks.return_value = [
+        dummies.make_track(info=dummies.make_track_info(id=1)),
+        dummies.make_track(info=dummies.make_track_info(id=3)),
+    ]
+    cli.download_tracks(
+        serial_config=default_serial_config, track_ids=[1, 3], output_dir=tmp_path
+    )
+    assert (tmp_path / "downloaded_tracks-1.gpx").is_file()
+    assert (tmp_path / "downloaded_tracks-3.gpx").is_file()
+
+
+def test_download_tracks__just_returns_if_track_is_list_is_empty(
+    tmp_path: Path,
+) -> None:
+    cli.download_tracks(
+        serial_config=default_serial_config, track_ids=[], output_dir=tmp_path
+    )
+
+
+def test_download_tracks__adds_latest_track_id_if_flag_is_given(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    mocked_get_track_list = mocker.patch("sq100.arival_sq100.get_track_list")
+    mocked_get_track_list.return_value = [test_arival_sq100.make_track_list_entry(id=8)]
+    mocked_get_tracks = mocker.patch("sq100.arival_sq100.get_tracks")
+    mocked_get_tracks.return_value = []
+    cli.download_tracks(
+        serial_config=default_serial_config,
+        track_ids=[1, 3],
+        latest=True,
+        output_dir=tmp_path,
+    )
+    mocked_get_tracks.assert_called_once_with(
+        config=default_serial_config, track_ids=[1, 3, 8]
+    )
+
+
+def test_download_tracks__creates_single_gpx_file_if_merge_is_true(
+    tmp_path: Path, mocker: MockerFixture
+) -> None:
+    mocked_get_tracks = mocker.patch("sq100.arival_sq100.get_tracks")
+    mocked_get_tracks.return_value = [
+        dummies.make_track(info=dummies.make_track_info(id=1)),
+        dummies.make_track(info=dummies.make_track_info(id=3)),
+    ]
+    cli.download_tracks(
+        serial_config=default_serial_config,
+        track_ids=[1, 3],
+        merge=True,
+        output_dir=tmp_path,
+    )
+    assert (tmp_path / "downloaded_tracks.gpx").is_file()
+
+
+def test_get_latest_track_id__returns_id_of_most_recent_date(
+    mocker: MockerFixture,
+) -> None:
+    mocked_get_track_list = mocker.patch("sq100.arival_sq100.get_track_list")
+    mocked_get_track_list.return_value = [
+        test_arival_sq100.make_track_list_entry(
+            date=datetime.datetime(2001, 2, 3, 4, 5, 6), id=10
+        ),
+        test_arival_sq100.make_track_list_entry(
+            date=datetime.datetime(2002, 2, 3, 4, 5, 6), id=11
+        ),
+        test_arival_sq100.make_track_list_entry(
+            date=datetime.datetime(2001, 12, 3, 4, 5, 6), id=12
+        ),
+    ]
+    latest_track_id = cli.get_latest_track_id(default_serial_config)
+    assert latest_track_id == 11
+
+
+def test_get_latest_track_id__returns_none_if_track_list_is_empty(
+    mocker: MockerFixture,
+) -> None:
+    mocked_get_track_list = mocker.patch("sq100.arival_sq100.get_track_list")
+    mocked_get_track_list.return_value = []
+    latest_track_id = cli.get_latest_track_id(default_serial_config)
+    assert latest_track_id is None

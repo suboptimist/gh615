@@ -91,11 +91,10 @@ def make_track_info(
 
 def make_track(
     track_points: Optional[List[arival_sq100.TrackPoint]] = None,
+    info: Optional[arival_sq100.TrackInfo] = None,
 ) -> arival_sq100.Track:
-    if track_points is None:
-        track_points = []
     return arival_sq100.Track(
-        info=make_track_info(), laps=[], track_points=track_points
+        info=info or make_track_info(), laps=[], track_points=track_points or []
     )
 
 
