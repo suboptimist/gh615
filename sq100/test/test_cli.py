@@ -167,10 +167,9 @@ def test_show_tracklist__shows_table_of_tracks(
     cli.show_tracklist(default_serial_config)
     captured = capsys.readouterr()
     expected = (
-        ""
-        + "  id  date                   distance  duration      trkpnts    laps    mem. index\n"
-        + "----  -------------------  ----------  ----------  ---------  ------  ------------\n"
-        + "   0  2001-02-03 04:05:06          42  1:02:03            11      12            13\n"
+        "  id  date                   distance  duration      trkpnts    laps    mem. index\n"  # noqa: E501
+        "----  -------------------  ----------  ----------  ---------  ------  ------------\n"  # noqa: E501
+        "   0  2001-02-03 04:05:06          42  1:02:03            11      12            13\n"  # noqa: E501
     )
     assert captured.out == expected
 

@@ -16,9 +16,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
-      - name: Lint with black
+      - name: Check format with black
         run: |
           black . --check
+      - name: Lint with flake8
+        run: |
+          flake8
       - name: Check import order with isort
         run: |
           isort . --check
