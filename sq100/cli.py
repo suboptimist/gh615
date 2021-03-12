@@ -125,9 +125,6 @@ def parse_args(
         default=[],
     )
     parser_download.add_argument(
-        "-f", "--format", help="the format to export to", choices=["gpx"]
-    )
-    parser_download.add_argument(
         "-m", "--merge", help="merge into single file?", action="store_true"
     )
     parser_download.add_argument(

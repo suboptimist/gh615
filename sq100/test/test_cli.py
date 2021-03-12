@@ -22,28 +22,23 @@ import pytest
 from sq100 import cli
 from sq100 import serial_connection
 
+default_serial_config = serial_connection.SerialConfig(
+    port="my_port", baudrate=42, timeout=1.23
+)
+
 
 def test_parse_args__exits_if_no_argument_give() -> None:
-    default_serial_config = serial_connection.SerialConfig(
-        port="my_port", baudrate=42, timeout=1.23
-    )
     with pytest.raises(SystemExit):
         cli.parse_args(args=[], default_serial_config=default_serial_config)
 
 
 def test_parse_args__list_with_no_args_returns_serial_defaults() -> None:
-    default_serial_config = serial_connection.SerialConfig(
-        port="my_port", baudrate=42, timeout=1.23
-    )
     opts = cli.parse_args(args=["list"], default_serial_config=default_serial_config)
     assert isinstance(opts, cli.ListOptions)
     assert opts.serial_config == default_serial_config
 
 
-def test_parse_args__list_configures_serial_config() -> None:
-    default_serial_config = serial_connection.SerialConfig(
-        port="my_port", baudrate=42, timeout=1.23
-    )
+def test_parse_args__list_allows_configuring_serial_config() -> None:
     opts = cli.parse_args(
         args=[
             "list",
@@ -60,3 +55,84 @@ def test_parse_args__list_configures_serial_config() -> None:
     assert opts.serial_config.port == "your_port"
     assert opts.serial_config.baudrate == 43
     assert opts.serial_config.timeout == 2.34
+
+
+def test_parse_args__download_with_no_args_returns_serial_defaults() -> None:
+    opts = cli.parse_args(
+        args=["download"], default_serial_config=default_serial_config
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.serial_config == default_serial_config
+
+
+def test_parse_args__download_allows_configuring_serial_config() -> None:
+    opts = cli.parse_args(
+        args=[
+            "download",
+            "--comport",
+            "your_port",
+            "--baudrate",
+            "43",
+            "--timeout",
+            "2.34",
+        ],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.serial_config.port == "your_port"
+    assert opts.serial_config.baudrate == 43
+    assert opts.serial_config.timeout == 2.34
+
+
+def test_parse_args__download_understands_single_track_id() -> None:
+    opts = cli.parse_args(
+        args=["download", "2"],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.track_id == [2]
+
+
+def test_parse_args__download_understands_complex_track_id_list() -> None:
+    opts = cli.parse_args(
+        args=["download", "2,5-7,8,13"],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.track_id == [2, 5, 6, 7, 8, 13]
+
+
+def test_parse_args__download_sets_merge_to_false_by_default() -> None:
+    opts = cli.parse_args(
+        args=["download"],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.merge is False
+
+
+def test_parse_args__download_sets_merge_to_true_if_flag_is_given() -> None:
+    opts = cli.parse_args(
+        args=["download", "--merge"],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.merge is True
+
+
+def test_parse_args__download_sets_latest_to_false_by_default() -> None:
+    opts = cli.parse_args(
+        args=["download"],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.latest is False
+
+
+def test_parse_args__download_sets_latest_to_true_if_flag_is_given() -> None:
+    opts = cli.parse_args(
+        args=["download", "--latest"],
+        default_serial_config=default_serial_config,
+    )
+    assert isinstance(opts, cli.DownloadOptions)
+    assert opts.latest is True
