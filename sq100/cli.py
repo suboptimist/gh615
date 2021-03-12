@@ -21,16 +21,14 @@ import argparse
 import configparser
 import logging
 import os
-from pathlib import Path
 import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Literal, Optional, Set, Union
+
 import tabulate
 
-from dataclasses import dataclass
-from typing import Literal, List, Optional, Set, Union
-
-from sq100 import serial_connection
-from sq100 import arival_sq100
-from sq100 import gpx
+from sq100 import arival_sq100, gpx, serial_connection
 
 logging.basicConfig(filename="sq100.log", level=logging.DEBUG)
 

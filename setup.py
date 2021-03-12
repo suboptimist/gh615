@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
-from setuptools import setup
 
+from setuptools import setup
 
 setup(
     name="sq100",
@@ -49,6 +49,7 @@ setup(
     extras_require={
         "dev": [
             "black",
+            "isort",
             "mock",
             "mypy==0.782",  # to avoid python/mypy#9656
             "pip-tools",

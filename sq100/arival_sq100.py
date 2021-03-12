@@ -17,17 +17,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import collections
-from dataclasses import dataclass
-import functools
 import datetime
+import functools
 import logging
 import struct
-
+from dataclasses import dataclass
 from typing import List, Tuple
 
-from sq100.exceptions import SQ100MessageException
-from sq100.serial_connection import SerialConnection, SerialConfig
 from sq100 import gpx
+from sq100.exceptions import SQ100MessageException
+from sq100.serial_connection import SerialConfig, SerialConnection
 
 logger = logging.getLogger(__name__)
 

@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
+import xml.etree.ElementTree as etree
 from pathlib import Path
 from typing import List, Optional
-import xml.etree.ElementTree as etree
 
 from sq100 import gpx
 

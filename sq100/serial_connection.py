@@ -19,10 +19,10 @@
 from __future__ import annotations
 
 import logging
-import serial
 from dataclasses import dataclass
+from typing import Any, Optional, cast
 
-from typing import Any, cast, Optional
+import serial
 
 from sq100.exceptions import SQ100SerialException
 

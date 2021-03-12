@@ -16,12 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from dataclasses import dataclass
 import datetime
-from typing import List, Optional
-
 import xml.etree.ElementTree as etree
-
+from dataclasses import dataclass
+from typing import List, Optional
 
 "namespacces"
 gpx_ns = "http://www.topografix.com/GPX/1/1"

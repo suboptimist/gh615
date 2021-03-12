@@ -17,14 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-import pytest
 import struct
+
+import pytest
 from pytest_mock import MockerFixture
 
-from sq100.test.dummies import make_track_info, make_track_points
-from sq100 import arival_sq100
-from sq100 import serial_connection
+from sq100 import arival_sq100, serial_connection
 from sq100.exceptions import SQ100MessageException
+from sq100.test.dummies import make_track_info, make_track_points
 
 
 def make_track_head(
