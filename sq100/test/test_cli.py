@@ -270,4 +270,3 @@ def test_get_latest_track_id__returns_none_if_track_list_is_empty(
     mocked_get_track_list.return_value = []
     latest_track_id = cli.get_latest_track_id(default_serial_config)
     assert latest_track_id is None
-    
