@@ -24,7 +24,7 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Literal, Optional, Set, Union
+from typing import List, Optional, Set, Union
 
 import tabulate
 
