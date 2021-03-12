@@ -19,6 +19,9 @@ jobs:
       - name: Lint with black
         run: |
           black . --check
+      - name: Check import order with isort
+        run: |
+          isort . --check
       - name: Check with mypy
         run: |
           mypy .
