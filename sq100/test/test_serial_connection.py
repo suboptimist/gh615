@@ -17,11 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pytest
-from pytest_mock import MockerFixture
 import serial
+from pytest_mock import MockerFixture
 
-from sq100.serial_connection import SerialConnection, SerialConfig
 from sq100.exceptions import SQ100SerialException
+from sq100.serial_connection import SerialConfig, SerialConnection
 
 
 def test_enter__everything_fine_if_successful(mocker: MockerFixture) -> None:

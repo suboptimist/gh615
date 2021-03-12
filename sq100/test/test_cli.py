@@ -19,13 +19,12 @@
 
 import datetime
 from pathlib import Path
+
 import pytest
 from pytest_mock import MockerFixture
 
-from sq100.test import dummies
-from sq100.test import test_arival_sq100
-from sq100 import cli
-from sq100 import serial_connection
+from sq100 import cli, serial_connection
+from sq100.test import dummies, test_arival_sq100
 
 default_serial_config = serial_connection.SerialConfig(
     port="my_port", baudrate=42, timeout=1.23
