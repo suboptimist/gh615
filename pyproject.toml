@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "sq100"
+version = "0.1.1"
+description = "Alternative read out for the SQ 100 heart rate monitor"
+authors = ["Timo Nachstedt <mail@nachstedt.com>"]
+license = "Apache Software License"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+tabulate = "^0.8.9"
+pyserial = "^3.5"
+
+[tool.poetry.dev-dependencies]
+black = "^20.8b1"
+flake8 = "^3.8.4"
+isort = "^5.7.0"
+mock = "^4.0.3"
+mypy = "0.782"
+pytest = "^6.2.2"
+pytest-cov = "^2.11.1"
+pytest-mock = "^3.5.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--cov-report=xml --cov=sq100"
