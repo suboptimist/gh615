@@ -23,3 +23,6 @@ pytest-mock = "^3.5.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--cov-report=xml --cov=sq100"
